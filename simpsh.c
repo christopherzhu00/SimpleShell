@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 	int size = 0;
 	
 	
-	arguments = malloc(sizeof(int));
+	arguments = malloc(sizeof(int) * 1000000);
 	if (arguments == NULL)
 	{
 		fprintf(stderr, "No space of the array");
@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
 	static struct option long_options[] = 
 	{
 		{"rdonly", required_argument, 0, 'r'},
+		{"wronly", required_argument, 0, 'w'},
 		{0, 0, 0, 0}
 	};
 	
@@ -34,30 +35,43 @@ int main(int argc, char *argv[])
 	
 	opt = getopt_long(argc, argv, "a", long_options, &option_index);
 	
+	int fd;
+	
 	while(opt != -1)
 	{
-		printf("%d\n", opt);
-		printf("i am pobeAFJS:AKFJAS:Flter \n");
 		if(size == maxAlloc)
 		{
-			size++;
-			maxAlloc++;
+			printf("I AM A FAGGOT");
+			maxAlloc *= 2;
 			arguments = realloc(arguments, maxAlloc * sizeof(char));	
 		}			
 		
 		switch(opt)
 		{
 			case 'r' :
-				arguments[counter] = counter;
+				fd = open(optarg, O_RDONLY);
+				if(fd == -1)
+				{
+					fprintf(stderr, "Error in opening file.")
+				}
+				else
+					arguments[counter] = fd
 				counter++;
-				printf("i am pobelter \n");
-				printf("%d\n", size);
-				printf("%d\n", arguments[counter]);
+				break;
+			case 'w' :
+				fd = open(optarg, O_WRONLY);
+				if(fd == -1)
+				{
+					fprintf(stderr, "Error in opening file.")
+				}
+				else
+					arguments[counter] = fd
+				arguments[counter] = fd
+				counter++;
 				break;
 		}
-
+		size++;
 		opt = getopt_long(argc, argv, "a", long_options, &option_index);
-		printf("%d", opt);
 		
 	}
 	
