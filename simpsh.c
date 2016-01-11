@@ -10,6 +10,7 @@ int* arguments;
 int counter = 0;
 int verboseFlag = 0;
 
+
 int main(int argc, char *argv[])
 {
 	int opt = 0;
@@ -47,11 +48,17 @@ int main(int argc, char *argv[])
 	int fd;
 	
 	int iterator;
-	int option_index_placeholder = 0;
-	int argument_index;
+	int option_index_placeholder = 0;	// holds the index of the current option 
+	int argument_index;				// holds the index of the argument
 	
-	int boolean = 0;
+	int size_of_argument1 = 0;
+	int size_of_argument2 = 0;
+	int size_of_argument3 = 0;
 	
+	
+	int failure = 0;
+	int z;
+	int i;
 	
 	while(opt != -1)
 	{
@@ -67,6 +74,7 @@ int main(int argc, char *argv[])
 		option_index_placeholder = (optind - option_index_placeholder);
 		printf("THE OPTION INDEX IS: %d\n", optind);
 		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
+		printf("IN THE SWITCH NOW BOYS \n");
 		switch(opt)
 		{
 			
@@ -87,8 +95,14 @@ int main(int argc, char *argv[])
 					fprintf(stderr, "Error in opening file.");
 				}
 				else
+				{
 					arguments[counter] = fd;
+					printf("fd is: %d\n", fd);
+					printf("counter is: %d\n", counter);
+					printf("THE VALUE IN THE THIGNY IS %d\n", arguments[counter]);
+				}
 				counter++;
+				
 				break;
 			case 'w' :
 				if(verboseFlag)
@@ -121,73 +135,94 @@ int main(int argc, char *argv[])
 			// special case since option_index_placeholder stores the next command beginning and not its arguments
 				if(verboseFlag)
 				{
-					argument_index = option_index_placeholder + 1;			
+					argument_index = optind + 1;			
 				}
 				else
 				{
-					argument_index = option_index_placeholder - 1;
+					argument_index = optind - 1;
 				}
-/*				for(iterator = 0; iterator < 4; iterator++)
+
+				printf("argument_index is: %d\n", argument_index);
+				
+				printf("IM GOIN IN\n");
+				printf("arg c: %d\n", argc);
+				printf("optind: %d\n", optind);
+				if(argument_index + 3 >= argc)
 				{
-					if(argv[argument_index+iterator][iterator] == '-')
-					{
-						
-					}
-				}*/
-				
-				
-				
-				
-				
-				
-				
-				for(iterator = 0; iterator < 4; iterator++)
-				{
-					if(iterator == 3 && isdigit(argv[argument_index + iterator][iterator])
-					{
-						fprintf(stderr, "Error in arguments. Too many arguments.")
-					}
-						
-					else if(strlen(argv[argument_index + iterator]) == 1)
-					{
-						if(!(isdigit(argv[argument_index + iterator])))
-						{
-							fprintf(stderr, "Error in arguments. Not a digit.")
-						}
-						else
-						{
-							command_arg[arg_counter] = (argv[argument_index + iterator] - '0');
-							arg_counter++;
-						}
-					}
-					else 
-					{
-						fprintf(stderr, "Error in arguments. Not one character.")
-					}
+					fprintf(stderr, "Error in arguments. Not enough arguments.");
+					break;
 				}
 				
 				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-/*				for(iterator = 0; iterator < 3; iterator++)
+				for(i = 0; argv[argument_index][i] != '\0'; i++)
 				{
-					printf("%s ", argv[argument_index + iterator]);
-				}*/
-//				printf("\n");				// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
+					size_of_argument1++;
+				}
+				for(i = 0; argv[argument_index + 1][i] != '\0'; i++)
+				{
+					size_of_argument2++;
+				}
+				for(i = 0; argv[argument_index + 2][i] != '\0'; i++)
+				{
+					size_of_argument3++;
+				}
+				printf("size of  arg1: %d\n", size_of_argument1);
+				printf("size of  arg2: %d\n", size_of_argument2);
+				printf("size of  arg3: %d\n", size_of_argument3);
+
+					for(z = 0; z < size_of_argument1; z++)
+					{
+						if(!(isdigit(argv[argument_index][z])))
+						{
+							fprintf(stderr, "Error in arguments. Invalid argument.");
+							break;
+						}
+					}
+					for(z = 0; z < size_of_argument2; z++)
+					{
+						if(!(isdigit(argv[argument_index+1][z])))
+						{
+							fprintf(stderr, "Error in arguments. Invalid argument.");
+							break;
+						}
+					}
+					for(z = 0; z < size_of_argument3; z++)
+					{
+						if(!(isdigit(argv[argument_index+2][z])))
+						{
+							fprintf(stderr, "Error in arguments. Invalid argument.");
+							break;
+						}
+					}
+				command_arg[0] = atoi(argv[argument_index]);
+				command_arg[1] = atoi(argv[argument_index + 1]);
+				command_arg[2] = atoi(argv[argument_index + 2]);
+				
+				printf("DONEZO\n");
+
+				size_of_argument1 = 0;
+				size_of_argument2 = 0;
+				size_of_argument3 = 0;				
 				
 				
 				
-/*				pid_t Child_PID = fork(); 
+				
+				printf("EXECUTORS\n");
+				
+				pid_t Child_PID = fork(); 
+				printf("THE CHILDPID IS: %d", Child_PID);
 				if (Child_PID == 0) { 
 					//its a child
+				printf("egg\n");
+				
+				for(i = 0; i < 3; i++)
+				{
+	//				fileD = command_arg[i];
+					printf("The command arg is: %d\n", command_arg[i]); 
+	//				dup2(arguments[fileD], i);
+				}
+				printf("EXECUTOR\n");
+				execvp(argv[argument_index + 3], &argv[argument_index + 3]);
 				}
 				else if (Child_PID > 0) {
 					//its a parent
@@ -196,18 +231,28 @@ int main(int argc, char *argv[])
 					//shit hit the fan
 					printf("Messed up forking"); 
 					exit(1); 
-				}*/
+				}
 				break;
 		}
 		size++;
 		
-		arg_counter = 0;
+	//	arg_counter = 0;
 		
 		
 	//	printf("THE OPTION INDEX IS: %d\n", optind);
 		opt = getopt_long(argc, argv, "a", long_options, &option_index);
 	//	printf("THE OPTION INDEX IS: %d\n", optind);
 	}
-	
+	printf("counter IS: %d\n", counter);
+	for(i = 0; i < 3; i++)
+	{
+		printf("arguments value is :%d\n", arguments[i]);
+	}
+/*	for(i = 0; i < sizeof(arguments)/sizeof(int); i++) {
+					printf("The argument is: %d\n", arguments[i]); 
+				}
+				int fileD;	*/
 	exit(0);
 }
+
+
