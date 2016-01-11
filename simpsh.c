@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 		{"rdonly", required_argument, 0, 'r'},
 		{"wronly", required_argument, 0, 'w'},
 		{"verbose", no_argument, 0 , 'v'},
+		{"command", required_argument, 0, 'cmd'}
 		{0, 0, 0, 0}
 	};
 	
@@ -104,11 +105,25 @@ int main(int argc, char *argv[])
 					arguments[counter] = fd;
 				counter++;
 				break;
+			
 			case 'v' :
 				verboseFlag = 1;
 				printf("FLAG HAS BEEN SET\n");
 				break;
 				
+			case 'cmd'
+				Child_PID = fork(); 
+				if (Child_PID == 0) { 
+					//its a child
+				}
+				else if (Child_PID > 0) {
+					//its a parent
+				}
+				else {
+					//shit hit the fan
+					printf("Messed up forking"); 
+					exit(1); 
+				}
 		}
 		size++;
 	//	printf("THE OPTION INDEX IS: %d\n", optind);
