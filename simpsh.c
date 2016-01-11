@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <errno.h>
 
 int* arguments;
 int counter = 0;
@@ -166,9 +167,9 @@ int main(int argc, char *argv[])
 				{
 					size_of_argument3++;
 				}
-				printf("size of  arg1: %d\n", size_of_argument1);
+			printf("size of  arg1: %d\n", size_of_argument1);
 				printf("size of  arg2: %d\n", size_of_argument2);
-				printf("size of  arg3: %d\n", size_of_argument3);
+			printf("size of  arg3: %d\n", size_of_argument3);
 
 					for(z = 0; z < size_of_argument1; z++)
 					{
@@ -198,13 +199,16 @@ int main(int argc, char *argv[])
 				command_arg[1] = atoi(argv[argument_index + 1]);
 				command_arg[2] = atoi(argv[argument_index + 2]);
 				
-				printf("DONEZO\n");
+	//			printf("DONEZO\n");
 
 				size_of_argument1 = 0;
 				size_of_argument2 = 0;
 				size_of_argument3 = 0;				
 				
-				
+				for(i = 0; i < 3; i++)
+	{
+		printf("COMMAND arguments value is :%d\n", command_arg[i]);
+	}
 				
 				
 				printf("EXECUTORS\n");
@@ -214,15 +218,18 @@ int main(int argc, char *argv[])
 				if (Child_PID == 0) { 
 					//its a child
 				printf("egg\n");
-				
+				fprintf(stderr, "EXECUTOR\n");
 				for(i = 0; i < 3; i++)
 				{
-	//				fileD = command_arg[i];
+					int fileD;
+					fileD = command_arg[i];
 					printf("The command arg is: %d\n", command_arg[i]); 
-	//				dup2(arguments[fileD], i);
+					dup2(arguments[fileD], i);
 				}
-				printf("EXECUTOR\n");
+				
 				execvp(argv[argument_index + 3], &argv[argument_index + 3]);
+				printf("%d\n", errno);
+				perror(NULL);
 				}
 				else if (Child_PID > 0) {
 					//its a parent
@@ -251,7 +258,8 @@ int main(int argc, char *argv[])
 /*	for(i = 0; i < sizeof(arguments)/sizeof(int); i++) {
 					printf("The argument is: %d\n", arguments[i]); 
 				}
-				int fileD;	*/
+					*/
+					fprintf(stderr, "EXECUTOR\n");
 	exit(0);
 }
 
