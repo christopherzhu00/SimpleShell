@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 		{"rdonly", required_argument, 0, 'r'},
 		{"wronly", required_argument, 0, 'w'},
 		{"verbose", no_argument, 0 , 'v'},
-		{"command", required_argument, 0, 'cmd'}
+		{"command", required_argument, 0, 'c'}
 		{0, 0, 0, 0}
 	};
 	
@@ -111,8 +111,8 @@ int main(int argc, char *argv[])
 				printf("FLAG HAS BEEN SET\n");
 				break;
 				
-			case 'cmd'
-				Child_PID = fork(); 
+			case 'c'
+				pid_t Child_PID = fork(); 
 				if (Child_PID == 0) { 
 					//its a child
 				}
