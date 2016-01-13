@@ -271,104 +271,7 @@ int main(int argc, char *argv[])
 			// MIGHT NEED TO UPDATE
 			current += (count+1);
 			
-			
-//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA			
-/*			if(verboseFlag)
-				{
-					
-					for(iterator = 0; iterator < 2; iterator++)
-					{
-						printf("the iterator is: %d\n", iterator); 
-	//					printf("%s ", argv[option_index_placeholder + iterator]);
-					}
-					printf("\n");	
-					argument_index = optind + 1;		
-				}
-				else
-				{
-					argument_index = optind - 1;
-				}
-
-				//printf("argument_index is: %d\n", argument_index);
-				
-				//printf("IM GOIN IN\n");
-				//printf("arg c: %d\n", argc);
-				//printf("optind: %d\n", optind);
-				if(argument_index + 3 >= argc)
-				{
-					fprintf(stderr, "Error in arguments. Not enough arguments.\n");
-					break;
-				}
-				
-				
-				for(i = 0; argv[argument_index][i] != '\0'; i++)
-				{
-					size_of_argument1++;
-				}
-				for(i = 0; argv[argument_index + 1][i] != '\0'; i++)
-				{
-					size_of_argument2++;
-				}
-				for(i = 0; argv[argument_index + 2][i] != '\0'; i++)
-				{
-					size_of_argument3++;
-				}
-			//printf("size of  arg1: %d\n", size_of_argument1);
-			//printf("size of  arg2: %d\n", size_of_argument2);
-			//printf("size of  arg3: %d\n", size_of_argument3);
-
-					for(z = 0; z < size_of_argument1; z++)
-					{
-						if(!(isdigit(argv[argument_index][z])))
-						{
-							fprintf(stderr, "Error in arguments. Invalid argument.");
-							break;
-						}
-					}
-					for(z = 0; z < size_of_argument2; z++)
-					{
-						if(!(isdigit(argv[argument_index+1][z])))
-						{
-							fprintf(stderr, "Error in arguments. Invalid argument.");
-							break;
-						}
-					}
-					for(z = 0; z < size_of_argument3; z++)
-					{
-						if(!(isdigit(argv[argument_index+2][z])))
-						{
-							fprintf(stderr, "Error in arguments. Invalid argument.");
-							break;
-						}
-					}
-				printf("THE INT IN COMMANDARG0 is: %d\n", atoi(argv[argument_index]));
-				printf("THE INT IN COMMANDARG1 is: %d\n", atoi(argv[argument_index + 1]));
-				printf("THE INT IN COMMANDARG2 is: %d\n", atoi(argv[argument_index + 2]));
-				command_arg[0] = atoi(argv[argument_index]);
-				command_arg[1] = atoi(argv[argument_index + 1]);
-				command_arg[2] = atoi(argv[argument_index + 2]);
-				
-	//			printf("DONEZO\n");
-
-				size_of_argument1 = 0;
-				size_of_argument2 = 0;
-				size_of_argument3 = 0;				
-				
-				/*for(i = 0; i < 3; i++)
-	{
-		printf("COMMAND arguments value is :%d\n", command_arg[i]);
-	}*/
-				
-				
-				//printf("EXECUTORS\n");
-				//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-				//PUT IN HERE 
-				//optind+= count-2 to factor in special case
-				//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-				
-				
-				
-				
+			/*
 				pid_t Child_PID = fork(); 
 				//printf("THE CHILDPID IS: %d", Child_PID);
 				if (Child_PID == 0) { 
@@ -399,7 +302,7 @@ int main(int argc, char *argv[])
 					exit(1); 
 				}
 				break;
-		}
+		}*/
 		size++;
 		
 	//	arg_counter = 0;
