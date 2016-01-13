@@ -204,28 +204,28 @@ int main(int argc, char *argv[])
 			if(verboseFlag)
 			{
 											//SIZE
-				for(iterator = 0; iterator < SIZEOFARRAY; iterator++)
+				for(iterator = 0; iterator < count+1; iterator++)
 				{
 					printf("%s ", argv[current + iterator]);
 				}
 				printf("\n");
 			}
 			//error checking to see if they put in enough stuff (commmand 0 1 2 blah)
-			if(SIZEOFARRAY < 5)
+			if(count < 4)
 			{
 				fprintf(stderr, "Error in arguments. Not enough arguments.\n");
 				break;
 			}
 						//THE NEW ARRAY
-			for(i = 0; argv[current + 1][i] != '\0'; i++)
+			for(i = 0; commandArgs[0][i] != '\0'; i++)
 			{
 				size_of_argument1++;
 			}				//UPDATE
-			for(i = 0; argv[current + 2][i] != '\0'; i++)
+			for(i = 0; commandArgs[1][i] != '\0'; i++)
 			{
 				size_of_argument2++;
 			}			//UPDATE
-			for(i = 0; argv[current + 3][i] != '\0'; i++)
+			for(i = 0; commandArgs[2][i] != '\0'; i++)
 			{
 				size_of_argument3++;
 			}
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 			for(z = 0; z < size_of_argument1; z++)
 			{
 					//NEW CREATED ARRAY
-				if(!(isdigit(argv[argument_index][z])))
+				if(!(isdigit(commandArgs[0][z])))
 					{
 						fprintf(stderr, "Error in arguments. Invalid argument.");
 						break;
@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
 			}
 			for(z = 0; z < size_of_argument2; z++)
 			{					//UPDATE
-				if(!(isdigit(argv[argument_index+1][z])))
+				if(!(isdigit(commandArgs[1][z])))
 				{
 					fprintf(stderr, "Error in arguments. Invalid argument.");
 					break;
@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
 			}
 			for(z = 0; z < size_of_argument3; z++)
 			{					//UPDATE
-				if(!(isdigit(argv[argument_index+2][z])))
+				if(!(isdigit(commandArgs[2][z])))
 				{
 					fprintf(stderr, "Error in arguments. Invalid argument.");
 					break;
@@ -258,9 +258,9 @@ int main(int argc, char *argv[])
 			}
 			
 								//UPDATE THIS ONE TOO
-			command_arg[0] = atoi(argv[argument_index]);
-			command_arg[1] = atoi(argv[argument_index + 1]);
-			command_arg[2] = atoi(argv[argument_index + 2]);
+			command_arg[0] = atoi(commandArgs[0]);
+			command_arg[1] = atoi(commandArgs[1]);
+			command_arg[2] = atoi(commandArgs[2]);
 				
 	//			printf("DONEZO\n");
 
@@ -269,8 +269,8 @@ int main(int argc, char *argv[])
 			size_of_argument3 = 0;		
 
 			// MIGHT NEED TO UPDATE
-			current += SIZEOFARRAY;
-	*/		
+			current += (count+1);
+			
 			
 //AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA			
 /*			if(verboseFlag)
@@ -363,7 +363,7 @@ int main(int argc, char *argv[])
 				//printf("EXECUTORS\n");
 				//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 				//PUT IN HERE 
-				//optind+= SIZEOFARRAY-2 to factor in special case
+				//optind+= count-2 to factor in special case
 				//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 				
 				
@@ -386,7 +386,7 @@ int main(int argc, char *argv[])
 				
 					printf("THE STRING IN ARGV is: %s\n", argv[argument_index + 3]);
 								//UPDATE THIS WITH NEW ARRAY
-					execvp(argv[argument_index + 3], &argv[argument_index + 3]);
+					execvp(commandArgs[3], &commandArgs[3]);
 					printf("%d\n", errno);
 					perror(NULL);
 				}
