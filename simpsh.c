@@ -63,6 +63,8 @@ int main(int argc, char *argv[])
 	int fileD;
 	int current = 1;
 	int SIZEOFARRAY;
+	int curCount; 
+	int ret =0; 
 
 	while(opt != -1)
 	{
@@ -77,52 +79,104 @@ int main(int argc, char *argv[])
 		char** commandArgs; 
 		switch(opt)
 		{
-			
 			case 'r' :
+				curCount = 1; 
+				for(;;){
+					if(argv[current+curCount] == '\0'){ 
+						break; 
+					}
+					else if(argv[current+curCount][0] == '-' &&argv[current+curCount][1] == '-' )
+						break; 
+					curCount++; 
+				}
 				if(verboseFlag)
 				{
-					for(iterator = 0; iterator < 2; iterator++)
+					for(iterator = 0; iterator < curCount; iterator++)
 					{	
 						printf("%s ", argv[current + iterator]);
 					}
 					printf("\n");
 				}
+
+				if(curCount != 2){ 
+					fprintf(stderr, "Incorrect number of arguments\n"); 
+					ret =1; 
+				}
+
 				fd = open(optarg, O_RDONLY);
 				if(fd == -1)
 				{
-					fprintf(stderr, "Error in opening file.");
+					fprintf(stderr, "Error in opening file.\n");
+					ret =1; 
 				}
 				else
 				{
 					arguments[counter] = fd;
 				}
-				current +=2;
+				current +=curCount;
 				counter++;
 				
 				break;
 			case 'w' :
+				curCount = 1; 
+				for(;;){
+					if(argv[current+curCount] == '\0'){ 
+						break; 
+					}
+					else if(argv[current+curCount][0] == '-' &&argv[current+curCount][1] == '-' )
+						break; 
+					curCount++; 
+				}
 				if(verboseFlag)
 				{
-					for(iterator = 0; iterator < 2; iterator++)
+					for(iterator = 0; iterator < curCount; iterator++)
 					{
 						printf("%s ", argv[current + iterator]);
 					}
 					printf("\n");				// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
 				}
+
+				if(curCount != 2){ 
+					fprintf(stderr, "Incorrect number of arguments\n"); 
+					ret =1; 
+				}
+
 				fd = open(optarg, O_WRONLY);
 				if(fd == -1)
 				{
-					fprintf(stderr, "Error in opening file.");
+					fprintf(stderr, "Error in opening file.\n");
+					ret =1; 
 				}
 				else
 					arguments[counter] = fd;
 				counter++;
-				current+=2;
+				current+=curCount;
 				break;
 			
 			case 'v' :
+				curCount = 1; 
+				for(;;){
+					if(argv[current+curCount] == '\0'){ 
+						break; 
+					}
+					else if(argv[current+curCount][0] == '-' &&argv[current+curCount][1] == '-' )
+						break; 
+					curCount++; 
+				}
+				if(verboseFlag)
+				{
+					for(iterator = 0; iterator < curCount; iterator++)
+					{
+						printf("%s ", argv[current + iterator]);
+					}
+					printf("\n");				// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
+				}
+				if(curCount != 1){ 
+					fprintf(stderr, "Incorrect number of arguments\n"); 
+					ret =1; 
+				}
 				verboseFlag = 1;
-				current++;
+				current+=curCount;
 				break;
 				
 			case 'c' : 
@@ -148,12 +202,20 @@ int main(int argc, char *argv[])
 				if(count == maxChars) {
 					maxChars *= 2; 
 					commandArgs = realloc(commandArgs, maxChars); 
+					if(!commandArgs){
+						fprintf(stderr, "Error allocating memory.\n"); 
+						ret=1; 
+					}
 				}
 				int secondSpot = 0; 
 				while(argv[place][secondSpot] != '\0') {
 					if(secondSpot == innerMemory) {
 						innerMemory *= 2; 
 						commandArgs[count] = realloc(commandArgs[count], innerMemory*sizeof(char)); 
+						if(!commandArgs[count]){ 
+							fprintf(stderr, "Error allocating memory.\n"); 
+							ret =1; 
+						}
 					}
 					commandArgs[count][secondSpot] = argv[place][secondSpot]; 
 					secondSpot++; 
@@ -164,6 +226,10 @@ int main(int argc, char *argv[])
 			}
 			if(count == maxChars) {
 				commandArgs = realloc(commandArgs, sizeof(char*)*(maxChars+1)); 
+				if(!commandArgs) {
+					fprintf(stderr, "Error allocating memory.\n"); 
+					ret = 1; 
+				}
 			}
 			commandArgs[count] = NULL;  
 			 
@@ -186,7 +252,7 @@ int main(int argc, char *argv[])
 			if(count < 4)
 			{
 				fprintf(stderr, "Error in arguments. Not enough arguments.\n");
-				break;
+				ret =1; 
 			}
 						//THE NEW ARRAY
 			for(i = 0; commandArgs[0][i] != '\0'; i++)
@@ -210,24 +276,24 @@ int main(int argc, char *argv[])
 					//NEW CREATED ARRAY
 				if(!(isdigit(commandArgs[0][z])))
 					{
-						fprintf(stderr, "Error in arguments. Invalid argument.");
-						break;
+						fprintf(stderr, "Error in arguments. Invalid argument.\n");
+						ret = 1; 
 					}
 			}
 			for(z = 0; z < size_of_argument2; z++)
 			{					//UPDATE
 				if(!(isdigit(commandArgs[1][z])))
 				{
-					fprintf(stderr, "Error in arguments. Invalid argument.");
-					break;
+					fprintf(stderr, "Error in arguments. Invalid argument.\n");
+					ret =1; 
 				}
 			}
 			for(z = 0; z < size_of_argument3; z++)
 			{					//UPDATE
 				if(!(isdigit(commandArgs[2][z])))
 				{
-					fprintf(stderr, "Error in arguments. Invalid argument.");
-					break;
+					fprintf(stderr, "Error in arguments. Invalid argument.\n");
+					ret =1; 
 				}
 			}
 			
@@ -264,8 +330,8 @@ int main(int argc, char *argv[])
 				}
 				else {
 					//shit hit the fan
-					printf("Messed up forking"); 
-					exit(1); 
+					printf("Messed up forking.\n"); 
+					ret =1; 
 				}
 				break;
 		}
@@ -273,7 +339,7 @@ int main(int argc, char *argv[])
 		
 		opt = getopt_long(argc, argv, "a", long_options, &option_index);
 	}
-	exit(0);
+	exit(ret);
 }
 
 
