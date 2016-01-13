@@ -332,7 +332,7 @@ int main(int argc, char *argv[])
 					ret =1; 
 				}
 				break;
-		}*/
+		}
 		size++;
 		
 		opt = getopt_long(argc, argv, "a", long_options, &option_index);

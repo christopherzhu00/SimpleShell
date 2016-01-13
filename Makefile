@@ -9,7 +9,7 @@ simpsh: simpsh.c
 	$(CC) $(CFLAGS) simpsh.c -o $@
 
 check:
-	test.sh
+	./test.sh
 	
 dist: $(DISTDIR).tar.gz
 
