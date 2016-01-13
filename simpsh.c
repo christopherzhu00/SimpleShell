@@ -71,11 +71,11 @@ int main(int argc, char *argv[])
 		}			
 		
 		
-		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
+		//printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
 		option_index_placeholder = (optind - option_index_placeholder);
-		printf("THE OPTION INDEX IS: %d\n", optind);
-		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
-		printf("IN THE SWITCH NOW BOYS \n");
+		//printf("THE OPTION INDEX IS: %d\n", optind);
+		//printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
+		//printf("IN THE SWITCH NOW BOYS \n");
 		switch(opt)
 		{
 			
@@ -98,9 +98,9 @@ int main(int argc, char *argv[])
 				else
 				{
 					arguments[counter] = fd;
-					printf("fd is: %d\n", fd);
-					printf("counter is: %d\n", counter);
-					printf("THE VALUE IN THE THIGNY IS %d\n", arguments[counter]);
+					//printf("fd is: %d\n", fd);
+					//printf("counter is: %d\n", counter);
+					//printf("THE VALUE IN THE THIGNY IS %d\n", arguments[counter]);
 				}
 				counter++;
 				
@@ -129,28 +129,35 @@ int main(int argc, char *argv[])
 			
 			case 'v' :
 				verboseFlag = 1;
-				printf("FLAG HAS BEEN SET\n");
+				//printf("FLAG HAS BEEN SET\n");
 				break;
 				
 			case 'c' : 
 			// special case since option_index_placeholder stores the next command beginning and not its arguments
 				if(verboseFlag)
 				{
-					argument_index = optind + 1;			
+					
+					for(iterator = 0; iterator < 2; iterator++)
+					{
+						printf("the iterator is: %d\n", iterator); 
+						printf("%s ", argv[option_index_placeholder + iterator]);
+					}
+					printf("\n");	
+					argument_index = optind + 1;		
 				}
 				else
 				{
 					argument_index = optind - 1;
 				}
 
-				printf("argument_index is: %d\n", argument_index);
+				//printf("argument_index is: %d\n", argument_index);
 				
-				printf("IM GOIN IN\n");
-				printf("arg c: %d\n", argc);
-				printf("optind: %d\n", optind);
+				//printf("IM GOIN IN\n");
+				//printf("arg c: %d\n", argc);
+				//printf("optind: %d\n", optind);
 				if(argument_index + 3 >= argc)
 				{
-					fprintf(stderr, "Error in arguments. Not enough arguments.");
+					fprintf(stderr, "Error in arguments. Not enough arguments.\n");
 					break;
 				}
 				
@@ -167,9 +174,9 @@ int main(int argc, char *argv[])
 				{
 					size_of_argument3++;
 				}
-			printf("size of  arg1: %d\n", size_of_argument1);
-				printf("size of  arg2: %d\n", size_of_argument2);
-			printf("size of  arg3: %d\n", size_of_argument3);
+			//printf("size of  arg1: %d\n", size_of_argument1);
+			//printf("size of  arg2: %d\n", size_of_argument2);
+			//printf("size of  arg3: %d\n", size_of_argument3);
 
 					for(z = 0; z < size_of_argument1; z++)
 					{
@@ -205,25 +212,25 @@ int main(int argc, char *argv[])
 				size_of_argument2 = 0;
 				size_of_argument3 = 0;				
 				
-				for(i = 0; i < 3; i++)
+				/*for(i = 0; i < 3; i++)
 	{
 		printf("COMMAND arguments value is :%d\n", command_arg[i]);
-	}
+	}*/
 				
 				
-				printf("EXECUTORS\n");
+				//printf("EXECUTORS\n");
 				
 				pid_t Child_PID = fork(); 
-				printf("THE CHILDPID IS: %d", Child_PID);
+				//printf("THE CHILDPID IS: %d", Child_PID);
 				if (Child_PID == 0) { 
 					//its a child
-				printf("egg\n");
-				fprintf(stderr, "EXECUTOR\n");
+				//printf("egg\n");
+				//fprintf(stderr, "EXECUTOR\n");
 				for(i = 0; i < 3; i++)
 				{
 					int fileD;
 					fileD = command_arg[i];
-					printf("The command arg is: %d\n", command_arg[i]); 
+					//printf("The command arg is: %d\n", command_arg[i]); 
 					dup2(arguments[fileD], i);
 				}
 				
@@ -250,16 +257,16 @@ int main(int argc, char *argv[])
 		opt = getopt_long(argc, argv, "a", long_options, &option_index);
 	//	printf("THE OPTION INDEX IS: %d\n", optind);
 	}
-	printf("counter IS: %d\n", counter);
-	for(i = 0; i < 3; i++)
+	//printf("counter IS: %d\n", counter);
+	/*for(i = 0; i < 3; i++)
 	{
 		printf("arguments value is :%d\n", arguments[i]);
-	}
+	}*/
 /*	for(i = 0; i < sizeof(arguments)/sizeof(int); i++) {
 					printf("The argument is: %d\n", arguments[i]); 
 				}
 					*/
-					fprintf(stderr, "EXECUTOR\n");
+					//fprintf(stderr, "EXECUTOR\n");
 	exit(0);
 }
 
