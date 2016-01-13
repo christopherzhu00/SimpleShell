@@ -93,7 +93,10 @@ int main(int argc, char *argv[])
 				{
 					for(iterator = 0; iterator < curCount; iterator++)
 					{	
-						printf("%s ", argv[current + iterator]);
+						printf("%s", argv[current + iterator]);
+						if(iterator != curCount - 1) {
+							printf(" "); 
+						}
 					}
 					printf("\n");
 				}
@@ -131,7 +134,10 @@ int main(int argc, char *argv[])
 				{
 					for(iterator = 0; iterator < curCount; iterator++)
 					{
-						printf("%s ", argv[current + iterator]);
+						printf("%s", argv[current + iterator]);
+						if(iterator != curCount-1) {
+							printf(" "); 
+						}
 					}
 					printf("\n");				// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
 				}
@@ -167,7 +173,10 @@ int main(int argc, char *argv[])
 				{
 					for(iterator = 0; iterator < curCount; iterator++)
 					{
-						printf("%s ", argv[current + iterator]);
+						printf("%s", argv[current + iterator]);
+						if(iterator != curCount-1) {
+							printf(" "); 
+						}
 					}
 					printf("\n");				// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
 				}
@@ -243,7 +252,10 @@ int main(int argc, char *argv[])
 											//SIZE
 				for(iterator = 0; iterator < count+1; iterator++)
 				{
-					printf("%s ", argv[current + iterator]);
+					printf("%s", argv[current + iterator]);
+					if(iterator != count) { 
+						printf(" ");
+					}
 				}
 				printf("\n");
 			}
