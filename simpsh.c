@@ -60,7 +60,8 @@ int main(int argc, char *argv[])
 	int failure = 0;
 	int z;
 	int i;
-	
+	int fileD;
+//	int child = 0;
 	while(opt != -1)
 	{
 		if(size == maxAlloc)
@@ -71,10 +72,11 @@ int main(int argc, char *argv[])
 		}			
 		
 		
-		//printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
-		option_index_placeholder = (optind - option_index_placeholder);
-		//printf("THE OPTION INDEX IS: %d\n", optind);
-		//printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
+		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
+		printf("THE OPTION INDEX IS: %d\n", optind);
+	//	option_index_placeholder = (optind - option_index_placeholder);
+		printf("THE OPTION INDEX IS: %d\n", optind);
+		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
 		//printf("IN THE SWITCH NOW BOYS \n");
 		switch(opt)
 		{
@@ -85,8 +87,8 @@ int main(int argc, char *argv[])
 			//		printf("i hate life\n");
 			//		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
 					for(iterator = 0; iterator < 2; iterator++)
-					{
-						printf("%s ", argv[option_index_placeholder + iterator]);
+					{	
+						printf("%s ", argv[optind + iterator - 2]);
 					}
 					printf("\n");
 				}
@@ -113,7 +115,7 @@ int main(int argc, char *argv[])
 			//		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
 					for(iterator = 0; iterator < 2; iterator++)
 					{
-						printf("%s ", argv[option_index_placeholder + iterator]);
+						printf("%s ", argv[optind + iterator - 2]);
 					}
 					printf("\n");				// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
 				}
@@ -140,7 +142,7 @@ int main(int argc, char *argv[])
 					for(iterator = 0; iterator < 2; iterator++)
 					{
 						printf("the iterator is: %d\n", iterator); 
-						printf("%s ", argv[option_index_placeholder + iterator]);
+	//					printf("%s ", argv[option_index_placeholder + iterator]);
 					}
 					printf("\n");	
 					argument_index = optind + 1;		
@@ -202,6 +204,9 @@ int main(int argc, char *argv[])
 							break;
 						}
 					}
+				printf("THE INT IN COMMANDARG0 is: %d\n", atoi(argv[argument_index]));
+				printf("THE INT IN COMMANDARG1 is: %d\n", atoi(argv[argument_index + 1]));
+				printf("THE INT IN COMMANDARG2 is: %d\n", atoi(argv[argument_index + 2]));
 				command_arg[0] = atoi(argv[argument_index]);
 				command_arg[1] = atoi(argv[argument_index + 1]);
 				command_arg[2] = atoi(argv[argument_index + 2]);
@@ -226,17 +231,19 @@ int main(int argc, char *argv[])
 					//its a child
 				//printf("egg\n");
 				//fprintf(stderr, "EXECUTOR\n");
-				for(i = 0; i < 3; i++)
-				{
-					int fileD;
-					fileD = command_arg[i];
-					//printf("The command arg is: %d\n", command_arg[i]); 
-					dup2(arguments[fileD], i);
-				}
+	//			child = 1;
+					for(i = 0; i < 3; i++)
+					{
+						fileD = command_arg[i];
+						printf("The command arg is: %d\n", command_arg[i]); 
+						printf("GET IN HERE\n");
+						dup2(arguments[fileD], i);
+					}
 				
-				execvp(argv[argument_index + 3], &argv[argument_index + 3]);
-				printf("%d\n", errno);
-				perror(NULL);
+					printf("THE STRING IN ARGV is: %s\n", argv[argument_index + 3]);
+					execvp(argv[argument_index + 3], &argv[argument_index + 3]);
+					printf("%d\n", errno);
+					perror(NULL);
 				}
 				else if (Child_PID > 0) {
 					//its a parent
@@ -254,7 +261,10 @@ int main(int argc, char *argv[])
 		
 		
 	//	printf("THE OPTION INDEX IS: %d\n", optind);
+//		printf("OPT IS : %d\n", opt);
+//		printf("OPTind IS : %d\n", optind);
 		opt = getopt_long(argc, argv, "a", long_options, &option_index);
+		
 	//	printf("THE OPTION INDEX IS: %d\n", optind);
 	}
 	//printf("counter IS: %d\n", counter);
