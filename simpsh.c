@@ -82,6 +82,8 @@ int main(int argc, char *argv[])
 		printf("THE OPTION INDEX IS: %d\n", optind);
 		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
 		//printf("IN THE SWITCH NOW BOYS \n");
+		int maxChars = 100; 
+		char** commandArgs; 
 		switch(opt)
 		{
 			
@@ -145,11 +147,16 @@ int main(int argc, char *argv[])
 				
 			case 'c' : 
 
-			int MAXCHARS = 100; 
-			char *commandArgs = malloc(sizeof(char)*MAXCHARS); 
+			
+			commandArgs = malloc(sizeof(char*)*maxChars); 
+			int memoryCount = 0; 
+			int innerMemory = 100; 
+			for(memoryCount = 0; memoryCount < maxChars; memoryCount++) {
+				commandArgs[memoryCount] = malloc(sizeof(char)*innerMemory); 
+			}
 			int count = 0; 
-			int place = current+1; 
-			int doubeDash = 0; 
+			int place = current+1;
+			int doubleDash = 0; 
 			 
 			while(!doubleDash && argv[place]!=NULL) { 
 				if(argv[place][0] == '-') { 
@@ -158,14 +165,35 @@ int main(int argc, char *argv[])
 						break; 
 					}
 				}
-				if(count == MAXCHARS) {
-					MAXCHARS *= 2; 
-					commandArgs = realloc(commandArgs, MAXCHARS); 
+				if(count == maxChars) {
+					maxChars *= 2; 
+					commandArgs = realloc(commandArgs, maxChars); 
 				}
-				commandArgs[count] = argv[place]; 
+				int secondSpot = 0; 
+				while(argv[place][secondSpot] != '\0') {
+					if(secondSpot == innerMemory) {
+						innerMemory *= 2; 
+						commandArgs[count] = realloc(commandArgs[count], innerMemory*sizeof(char)); 
+					}
+					commandArgs[count][secondSpot] = argv[place][secondSpot]; 
+					secondSpot++; 
+				}
+				innerMemory = 100; 
 				count++; 
 				place++; 
 			}
+			int j; 
+			int k; 
+			for(j = 0; j<count; j++) {
+				int k =0; 
+				printf("the command is: "); 
+				while(commandArgs[j][k]!='\0') {
+					printf("%c", commandArgs[j][k]); 
+					k++; 
+				}
+				printf("\n"); 
+			}
+			 
 			// special case since option_index_placeholder stores the next command beginning and not its arguments
 				if(verboseFlag)
 				{
