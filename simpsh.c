@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 	
 	int command_arg[3];
 	int command_counter = 0;
-	
+	char* all_command_values;
 	
 	
 	int maxAlloc = 1;
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 	int fileD;
 	int current = 1;
 //	char*
-	int special;
+	int SIZEOFARRAY;
 //	int child = 0;
 	while(opt != -1)
 	{
@@ -75,12 +75,12 @@ int main(int argc, char *argv[])
 		}			
 		
 		
-		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
+	//	printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
 		printf("THE OPTION INDEX IS: %d\n", optind);
 	//	option_index_placeholder = (optind - option_index_placeholder);
-		printf("THE OPTION CURRENT IS: %d\n", current);
-		printf("THE OPTION INDEX IS: %d\n", optind);
-		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
+//		printf("THE OPTION CURRENT IS: %d\n", current);
+//		printf("THE OPTION INDEX IS: %d\n", optind);
+//		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
 		//printf("IN THE SWITCH NOW BOYS \n");
 		int maxChars = 100; 
 		char** commandArgs; 
@@ -195,7 +195,85 @@ int main(int argc, char *argv[])
 			}
 			 
 			// special case since option_index_placeholder stores the next command beginning and not its arguments
-				if(verboseFlag)
+			
+			// CURRENT HOLDS INDEX AT COMMAND
+			// PRINTS THROUGH THE ARRAY IF VERBOSE IS ON
+			// CURRENT += size of array
+			// 
+			
+			if(verboseFlag)
+			{
+											//SIZE
+				for(iterator = 0; iterator < SIZEOFARRAY; iterator++)
+				{
+					printf("%s ", argv[current + iterator]);
+				}
+				printf("\n");
+			}
+			//error checking to see if they put in enough stuff (commmand 0 1 2 blah)
+			if(SIZEOFARRAY < 5)
+			{
+				fprintf(stderr, "Error in arguments. Not enough arguments.\n");
+				break;
+			}
+						//THE NEW ARRAY
+			for(i = 0; argv[current + 1][i] != '\0'; i++)
+			{
+				size_of_argument1++;
+			}				//UPDATE
+			for(i = 0; argv[current + 2][i] != '\0'; i++)
+			{
+				size_of_argument2++;
+			}			//UPDATE
+			for(i = 0; argv[current + 3][i] != '\0'; i++)
+			{
+				size_of_argument3++;
+			}
+			
+			
+			for(z = 0; z < size_of_argument1; z++)
+			{
+					//NEW CREATED ARRAY
+				if(!(isdigit(argv[argument_index][z])))
+					{
+						fprintf(stderr, "Error in arguments. Invalid argument.");
+						break;
+					}
+			}
+			for(z = 0; z < size_of_argument2; z++)
+			{					//UPDATE
+				if(!(isdigit(argv[argument_index+1][z])))
+				{
+					fprintf(stderr, "Error in arguments. Invalid argument.");
+					break;
+				}
+			}
+			for(z = 0; z < size_of_argument3; z++)
+			{					//UPDATE
+				if(!(isdigit(argv[argument_index+2][z])))
+				{
+					fprintf(stderr, "Error in arguments. Invalid argument.");
+					break;
+				}
+			}
+			
+								//UPDATE THIS ONE TOO
+			command_arg[0] = atoi(argv[argument_index]);
+			command_arg[1] = atoi(argv[argument_index + 1]);
+			command_arg[2] = atoi(argv[argument_index + 2]);
+				
+	//			printf("DONEZO\n");
+
+			size_of_argument1 = 0;
+			size_of_argument2 = 0;
+			size_of_argument3 = 0;		
+
+			// MIGHT NEED TO UPDATE
+			current += SIZEOFARRAY;
+	*/		
+			
+//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA			
+/*			if(verboseFlag)
 				{
 					
 					for(iterator = 0; iterator < 2; iterator++)
@@ -283,6 +361,13 @@ int main(int argc, char *argv[])
 				
 				
 				//printf("EXECUTORS\n");
+				//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+				//PUT IN HERE 
+				//optind+= SIZEOFARRAY-2 to factor in special case
+				//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+				
+				
+				
 				
 				pid_t Child_PID = fork(); 
 				//printf("THE CHILDPID IS: %d", Child_PID);
@@ -300,6 +385,7 @@ int main(int argc, char *argv[])
 					}
 				
 					printf("THE STRING IN ARGV is: %s\n", argv[argument_index + 3]);
+								//UPDATE THIS WITH NEW ARRAY
 					execvp(argv[argument_index + 3], &argv[argument_index + 3]);
 					printf("%d\n", errno);
 					perror(NULL);
