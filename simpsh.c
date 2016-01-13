@@ -144,6 +144,28 @@ int main(int argc, char *argv[])
 				break;
 				
 			case 'c' : 
+
+			int MAXCHARS = 100; 
+			char *commandArgs = malloc(sizeof(char)*MAXCHARS); 
+			int count = 0; 
+			int place = current+1; 
+			int doubeDash = 0; 
+			 
+			while(!doubleDash && argv[place]!=NULL) { 
+				if(argv[place][0] == '-') { 
+					if(argv[place][1] == '-') {
+						doubleDash = 1; 
+						break; 
+					}
+				}
+				if(count == MAXCHARS) {
+					MAXCHARS *= 2; 
+					commandArgs = realloc(commandArgs, MAXCHARS); 
+				}
+				commandArgs[count] = argv[place]; 
+				count++; 
+				place++; 
+			}
 			// special case since option_index_placeholder stores the next command beginning and not its arguments
 				if(verboseFlag)
 				{
