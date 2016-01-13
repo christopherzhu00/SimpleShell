@@ -61,6 +61,9 @@ int main(int argc, char *argv[])
 	int z;
 	int i;
 	int fileD;
+	int current = 1;
+//	char*
+	int special;
 //	int child = 0;
 	while(opt != -1)
 	{
@@ -75,6 +78,7 @@ int main(int argc, char *argv[])
 		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
 		printf("THE OPTION INDEX IS: %d\n", optind);
 	//	option_index_placeholder = (optind - option_index_placeholder);
+		printf("THE OPTION CURRENT IS: %d\n", current);
 		printf("THE OPTION INDEX IS: %d\n", optind);
 		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
 		//printf("IN THE SWITCH NOW BOYS \n");
@@ -88,7 +92,8 @@ int main(int argc, char *argv[])
 			//		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
 					for(iterator = 0; iterator < 2; iterator++)
 					{	
-						printf("%s ", argv[optind + iterator - 2]);
+			//			printf("%s ", argv[optind + iterator - 2]);
+						printf("%s ", argv[current + iterator]);
 					}
 					printf("\n");
 				}
@@ -104,6 +109,7 @@ int main(int argc, char *argv[])
 					//printf("counter is: %d\n", counter);
 					//printf("THE VALUE IN THE THIGNY IS %d\n", arguments[counter]);
 				}
+				current +=2;
 				counter++;
 				
 				break;
@@ -115,7 +121,8 @@ int main(int argc, char *argv[])
 			//		printf("THE OPTION INDEX placeholder IS: %d\n", option_index_placeholder);
 					for(iterator = 0; iterator < 2; iterator++)
 					{
-						printf("%s ", argv[optind + iterator - 2]);
+				//		printf("%s ", argv[optind + iterator - 2]);
+						printf("%s ", argv[current + iterator]);
 					}
 					printf("\n");				// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
 				}
@@ -127,11 +134,13 @@ int main(int argc, char *argv[])
 				else
 					arguments[counter] = fd;
 				counter++;
+				current+=2;
 				break;
 			
 			case 'v' :
 				verboseFlag = 1;
 				//printf("FLAG HAS BEEN SET\n");
+				current++;
 				break;
 				
 			case 'c' : 
