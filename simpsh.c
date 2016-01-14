@@ -264,13 +264,16 @@ int main(int argc, char *argv[])
 			if(count < 4)
 			{
 				fprintf(stderr, "Error in arguments. Not enough arguments.\n");
-				ret =1; 
+				ret =1;  
+				opt = getopt_long(argc, argv, "a", long_options, &option_index);
+				continue;
 			}
-						//THE NEW ARRAY
+						//THE NEW ARRAY 
 			for(i = 0; commandArgs[0][i] != '\0'; i++)
 			{ 
 				size_of_argument1++;
-			}	
+			}
+			
  			//UPDATE
 			for(i = 0; commandArgs[1][i] != '\0'; i++)
 			{
@@ -284,29 +287,35 @@ int main(int argc, char *argv[])
 			
 			
 			for(z = 0; z < size_of_argument1; z++)
-			{
-					//NEW CREATED ARRAY
+			{              //NEW CREATED ARRAY
 				if(!(isdigit(commandArgs[0][z])))
-					{
-						fprintf(stderr, "Error in arguments. Invalid argument.\n");
-						ret = 1; 
-					}
-			}
-			for(z = 0; z < size_of_argument2; z++)
-			{					//UPDATE
-				if(!(isdigit(commandArgs[1][z])))
 				{
 					fprintf(stderr, "Error in arguments. Invalid argument.\n");
+					ret = 1; 
+				}
+					
+				
+			}
+			for(z = 0; z < size_of_argument2; z++)
+			{						//UPDATE
+			if(!(isdigit(commandArgs[1][z])))
+				{
+				fprintf(stderr, "Error in arguments. Invalid argument.\n");
 					ret =1; 
 				}
 			}
 			for(z = 0; z < size_of_argument3; z++)
 			{					//UPDATE
-				if(!(isdigit(commandArgs[2][z])))
+			if(!(isdigit(commandArgs[2][z])))
 				{
 					fprintf(stderr, "Error in arguments. Invalid argument.\n");
 					ret =1; 
 				}
+			}
+			
+			if (ret == 1){
+				opt = getopt_long(argc, argv, "a", long_options, &option_index);
+				continue;
 			}
 			
 								//UPDATE THIS ONE TOO

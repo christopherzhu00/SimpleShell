@@ -1,7 +1,9 @@
 OPTIMIZE = -O2
 
 CC = gcc
-CFLAGS = $(OPTIMIZE) -g
+CFLAGS = $(OPTIMIZE) -g -Wall -Wextra -Wno-unused
+DIST_SOURCES = simpsh.c Makefile test.sh README check-dist
+DISTDIR = lab1-ZacharyBordofskyChrisZhu
 
 default: simpsh
 
@@ -10,7 +12,7 @@ simpsh: simpsh.c
 
 check:
 	./test.sh
-	
+
 dist: $(DISTDIR).tar.gz
 
 $(DISTDIR).tar.gz: $(DIST_SOURCES) check-dist
@@ -20,4 +22,7 @@ $(DISTDIR).tar.gz: $(DIST_SOURCES) check-dist
 		mv $@.tmp $@
 
 clean:
-	rm -f *.o simpsh
+	rm -f *.tmp *~ *.o *.tar.gz simpsh
+	rm -fr $(DISTDIR)
+	
+.PHONY: all dist check $(TEST_BASES) clean
