@@ -10,6 +10,11 @@
 int* arguments;
 int counter = 0;
 int verboseFlag = 0;
+int ret = 0;
+int current = 1;
+int curCount;
+void verbosePrint(char *argv[], int curCount, int current); 
+void fileFunction(char *argv[], int flag);
 
 
 int main(int argc, char *argv[])
@@ -46,7 +51,7 @@ int main(int argc, char *argv[])
 	
 	opt = getopt_long(argc, argv, "a", long_options, &option_index);
 	
-	int fd;
+	//int fd;
 	
 	int iterator;
 	int option_index_placeholder = 0;	// holds the index of the current option 
@@ -61,10 +66,10 @@ int main(int argc, char *argv[])
 	int z;
 	int i;
 	int fileD;
-	int current = 1;
+	
 	int SIZEOFARRAY;
-	int curCount; 
-	int ret =0; 
+	  
+	int fd; 
 
 	while(opt != -1)
 	{
@@ -80,6 +85,8 @@ int main(int argc, char *argv[])
 		switch(opt)
 		{
 			case 'r' :
+				fileFunction(argv, O_RDONLY); 
+			/*
 				curCount = 1; 
 				for(;;){
 					if(argv[current+curCount] == '\0'){ 
@@ -91,14 +98,7 @@ int main(int argc, char *argv[])
 				}
 				if(verboseFlag)
 				{
-					for(iterator = 0; iterator < curCount; iterator++)
-					{	
-						printf("%s", argv[current + iterator]);
-						if(iterator != curCount - 1) {
-							printf(" "); 
-						}
-					}
-					printf("\n");
+					verbosePrint(argv, curCount, current); 
 				}
 
 				if(curCount != 2){ 
@@ -118,10 +118,11 @@ int main(int argc, char *argv[])
 				}
 				current +=curCount;
 				counter++;
-				
+				*/
 				break;
 			case 'w' :
-				curCount = 1; 
+				fileFunction(argv, O_WRONLY); 
+				/*curCount = 1; 
 				for(;;){
 					if(argv[current+curCount] == '\0'){ 
 						break; 
@@ -132,14 +133,7 @@ int main(int argc, char *argv[])
 				}
 				if(verboseFlag)
 				{
-					for(iterator = 0; iterator < curCount; iterator++)
-					{
-						printf("%s", argv[current + iterator]);
-						if(iterator != curCount-1) {
-							printf(" "); 
-						}
-					}
-					printf("\n");				// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
+					verbosePrint(argv, curCount, current);		// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
 				}
 
 				if(curCount != 2){ 
@@ -147,7 +141,7 @@ int main(int argc, char *argv[])
 					ret =1; 
 				}
 
-				fd = open(optarg, O_WRONLY);
+				fd = open(optarg, yes);
 				if(fd == -1)
 				{
 					fprintf(stderr, "Error in opening file.\n");
@@ -157,6 +151,7 @@ int main(int argc, char *argv[])
 					arguments[counter] = fd;
 				counter++;
 				current+=curCount;
+				*/
 				break;
 			
 			case 'v' :
@@ -171,14 +166,15 @@ int main(int argc, char *argv[])
 				}
 				if(verboseFlag)
 				{
-					for(iterator = 0; iterator < curCount; iterator++)
+					/*for(iterator = 0; iterator < curCount; iterator++)
 					{
 						printf("%s", argv[current + iterator]);
 						if(iterator != curCount-1) {
 							printf(" "); 
 						}
 					}
-					printf("\n");				// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
+					printf("\n");*/
+					verbosePrint(argv, curCount, current); 				// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
 				}
 				if(curCount != 1){ 
 					fprintf(stderr, "Incorrect number of arguments\n"); 
@@ -250,14 +246,15 @@ int main(int argc, char *argv[])
 			if(verboseFlag)
 			{
 											//SIZE
-				for(iterator = 0; iterator < count+1; iterator++)
+				/*for(iterator = 0; iterator < count+1; iterator++)
 				{
 					printf("%s", argv[current + iterator]);
 					if(iterator != count) { 
 						printf(" ");
 					}
 				}
-				printf("\n");
+				printf("\n");*/
+				verbosePrint(argv, count+1, current); 
 			}
 			
 			//error checking to see if they put in enough stuff (commmand 0 1 2 blah)
@@ -359,6 +356,54 @@ int main(int argc, char *argv[])
 		opt = getopt_long(argc, argv, "a", long_options, &option_index);
 	}
 	exit(ret);
+}
+
+void verbosePrint(char *argv[], int curCount, int current) {
+	int iterator; 
+	for(iterator = 0; iterator < curCount; iterator++)
+	{
+		printf("%s", argv[current + iterator]);
+		if(iterator != curCount-1) { 
+			printf(" ");
+		}
+	}
+	printf("\n");
+}
+
+
+void fileFunction(char *argv[], int flag) { 
+	curCount = 1; 
+	for(;;){
+		if(argv[current+curCount] == '\0'){ 
+			break; 
+		}
+		else if(argv[current+curCount][0] == '-' &&argv[current+curCount][1] == '-' )
+			break; 
+		curCount++; 
+	}
+	if(verboseFlag)
+	{
+		verbosePrint(argv, curCount, current); 
+	}
+
+	if(curCount != 2){ 
+		fprintf(stderr, "Incorrect number of arguments\n"); 
+		ret =1; 
+	}
+
+	int fd = open(optarg, flag);
+	if(fd == -1)
+	{
+		fprintf(stderr, "Error in opening file.\n");
+		ret =1; 
+	}
+	else
+	{
+		arguments[counter] = fd;
+	}
+	current +=curCount;
+	counter++;
+
 }
 
 
