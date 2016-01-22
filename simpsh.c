@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <signal.h>
 
 int* arguments;
 int counter = 0;
@@ -43,6 +44,7 @@ int main(int argc, char *argv[])
 		{"rdonly", required_argument, 0, 'r'},
 		{"wronly", required_argument, 0, 'w'},
 		{"verbose", no_argument, 0 , 'v'},
+		{"abort", no_argument, 0, 'a'},
 		{"command", required_argument, 0, 'c'},
 		{"rdwr", required_argument, 0, 'e'},
 		{0, 0, 0, 0}
@@ -76,7 +78,6 @@ int main(int argc, char *argv[])
 	{
 		if(size == maxAlloc)
 		{
-	//		printf("I AM A FAGGOT\n");
 			maxAlloc *= 2;
 			arguments = realloc(arguments, maxAlloc * sizeof(char));	
 		}			
@@ -85,74 +86,18 @@ int main(int argc, char *argv[])
 		char** commandArgs; 
 		switch(opt)
 		{
-			case 'r' :
-				fileFunction(argv, O_RDONLY); 
-			/*
-				curCount = 1; 
-				for(;;){
-					if(argv[current+curCount] == '\0'){ 
-						break; 
-					}
-					else if(argv[current+curCount][0] == '-' &&argv[current+curCount][1] == '-' )
-						break; 
-					curCount++; 
-				}
+			case 'a' :
+				curCount = 1;
 				if(verboseFlag)
 				{
-					verbosePrint(argv, curCount, current); 
+					verbosePrint(argv, curCount, current); 		
 				}
-
-				if(curCount != 2){ 
-					fprintf(stderr, "Incorrect number of arguments\n"); 
-					ret =1; 
-				}
-
-				fd = open(optarg, O_RDONLY);
-				if(fd == -1)
-				{
-					fprintf(stderr, "Error in opening file.\n");
-					ret =1; 
-				}
-				else
-				{
-					arguments[counter] = fd;
-				}
-				current +=curCount;
-				counter++;
-				*/
+				raise(SIGSEGV);
+			case 'r' :
+				fileFunction(argv, O_RDONLY); 
 				break;
 			case 'w' :
 				fileFunction(argv, O_WRONLY); 
-				/*curCount = 1; 
-				for(;;){
-					if(argv[current+curCount] == '\0'){ 
-						break; 
-					}
-					else if(argv[current+curCount][0] == '-' &&argv[current+curCount][1] == '-' )
-						break; 
-					curCount++; 
-				}
-				if(verboseFlag)
-				{
-					verbosePrint(argv, curCount, current);		// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
-				}
-
-				if(curCount != 2){ 
-					fprintf(stderr, "Incorrect number of arguments\n"); 
-					ret =1; 
-				}
-
-				fd = open(optarg, yes);
-				if(fd == -1)
-				{
-					fprintf(stderr, "Error in opening file.\n");
-					ret =1; 
-				}
-				else
-					arguments[counter] = fd;
-				counter++;
-				current+=curCount;
-				*/
 				break;
 			case 'e':
 				fileFunction(argv, O_RDWR); 
@@ -169,15 +114,7 @@ int main(int argc, char *argv[])
 				}
 				if(verboseFlag)
 				{
-					/*for(iterator = 0; iterator < curCount; iterator++)
-					{
-						printf("%s", argv[current + iterator]);
-						if(iterator != curCount-1) {
-							printf(" "); 
-						}
-					}
-					printf("\n");*/
-					verbosePrint(argv, curCount, current); 				// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
+					verbosePrint(argv, curCount, current); 			
 				}
 				if(curCount != 1){ 
 					fprintf(stderr, "Incorrect number of arguments\n"); 
@@ -248,15 +185,6 @@ int main(int argc, char *argv[])
 			
 			if(verboseFlag)
 			{
-											//SIZE
-				/*for(iterator = 0; iterator < count+1; iterator++)
-				{
-					printf("%s", argv[current + iterator]);
-					if(iterator != count) { 
-						printf(" ");
-					}
-				}
-				printf("\n");*/
 				verbosePrint(argv, count+1, current); 
 			}
 			
