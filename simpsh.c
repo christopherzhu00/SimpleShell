@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
 		{"wronly", required_argument, 0, 'w'},
 		{"verbose", no_argument, 0 , 'v'},
 		{"command", required_argument, 0, 'c'},
+		{"rdwr", required_argument, 0, 'e'},
 		{0, 0, 0, 0}
 	};
 	
@@ -153,7 +154,9 @@ int main(int argc, char *argv[])
 				current+=curCount;
 				*/
 				break;
-			
+			case 'e':
+				fileFunction(argv, O_RDWR); 
+				break; 
 			case 'v' :
 				curCount = 1; 
 				for(;;){
