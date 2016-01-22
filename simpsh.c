@@ -14,6 +14,7 @@ int verboseFlag = 0;
 int ret = 0;
 int current = 1;
 int curCount;
+int optionalFlags = 0; 
 void verbosePrint(char *argv[], int curCount, int current); 
 void fileFunction(char *argv[], int flag);
 
@@ -47,6 +48,7 @@ int main(int argc, char *argv[])
 		{"abort", no_argument, 0, 'a'},
 		{"command", required_argument, 0, 'c'},
 		{"rdwr", required_argument, 0, 'e'},
+		{"append", no_argument, 0, 'p'},
 		{0, 0, 0, 0}
 	};
 	
@@ -93,15 +95,24 @@ int main(int argc, char *argv[])
 					verbosePrint(argv, curCount, current); 		
 				}
 				raise(SIGSEGV);
+
 			case 'r' :
 				fileFunction(argv, O_RDONLY); 
 				break;
+			
 			case 'w' :
 				fileFunction(argv, O_WRONLY); 
 				break;
+
 			case 'e':
 				fileFunction(argv, O_RDWR); 
+				break;
+
+			case 'p': 
+				optionalFlags |= O_APPEND; 
+				current++; 
 				break; 
+
 			case 'v' :
 				curCount = 1; 
 				for(;;){
@@ -113,8 +124,8 @@ int main(int argc, char *argv[])
 					curCount++; 
 				}
 				if(verboseFlag)
-				{
-					verbosePrint(argv, curCount, current); 			
+				{			
+					verbosePrint(argv, curCount, current); 				// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
 				}
 				if(curCount != 1){ 
 					fprintf(stderr, "Incorrect number of arguments\n"); 
@@ -190,7 +201,7 @@ int main(int argc, char *argv[])
 			
 			//error checking to see if they put in enough stuff (commmand 0 1 2 blah)
 			if(count < 4)
-			{
+			{ 
 				fprintf(stderr, "Error in arguments. Not enough arguments.\n");
 				ret =1;  
 				opt = getopt_long(argc, argv, "a", long_options, &option_index);
@@ -321,8 +332,10 @@ void fileFunction(char *argv[], int flag) {
 		fprintf(stderr, "Incorrect number of arguments\n"); 
 		ret =1; 
 	}
-
+	
+	flag |= optionalFlags; 
 	int fd = open(optarg, flag);
+	optionalFlags = 0; 
 	if(fd == -1)
 	{
 		fprintf(stderr, "Error in opening file.\n");
