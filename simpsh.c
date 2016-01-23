@@ -17,6 +17,7 @@ int curCount;
 int optionalFlags = 0; 
 void verbosePrint(char *argv[], int curCount, int current); 
 void fileFunction(char *argv[], int flag);
+void flagModifier(int option, char *argv[]); 
 
 
 int main(int argc, char *argv[])
@@ -42,13 +43,27 @@ int main(int argc, char *argv[])
 	
 	static struct option long_options[] = 
 	{
-		{"rdonly", required_argument, 0, 'r'},
-		{"wronly", required_argument, 0, 'w'},
-		{"verbose", no_argument, 0 , 'v'},
+		
+		
+		
 		{"abort", no_argument, 0, 'a'},
+		{"nonblock", no_argument, 0, 'b'},
 		{"command", required_argument, 0, 'c'},
-		{"rdwr", required_argument, 0, 'e'},
+		{"directory", no_argument, 0, 'd'},
+		{"excl", no_argument, 0, 'e'},
+		{"rdwr", required_argument, 0, 'f'},
+		{"cloexec", no_argument, 0, 'l'}, 
+		{"creat", no_argument, 0, 'm'},
+		{"nofollow", no_argument, 0, 'n'},
 		{"append", no_argument, 0, 'p'},
+		{"rsync", no_argument, 0, 'q'},
+		{"rdonly", required_argument, 0, 'r'},
+		{"rsync", no_argument, 0, 's'},
+		{"trunc", no_argument, 0. 't'},
+		{"verbose", no_argument, 0 , 'v'},
+		{"wronly", required_argument, 0, 'w'},
+		{"dsync", no_argument, 0, 'y'},
+		 
 		{0, 0, 0, 0}
 	};
 	
@@ -104,14 +119,53 @@ int main(int argc, char *argv[])
 				fileFunction(argv, O_WRONLY); 
 				break;
 
-			case 'e':
+			case 'f':
 				fileFunction(argv, O_RDWR); 
 				break;
 
 			case 'p': 
-				optionalFlags |= O_APPEND; 
-				current++; 
+				flagModifier(O_APPEND, argv); 
 				break; 
+
+			case 'l':
+				flagModifier(O_CLOEXEC, argv); 
+				break; 
+
+			case 'm':
+				flagModifier(O_CREAT, argv); 
+				break; 
+
+			case 'd':
+				flagModifier(O_DIRECTORY, argv); 
+				break; 
+
+			case 'y': 
+				flagModifier(O_DSYNC, argv); 
+				break; 
+
+			case 'e':
+				flagModifier(O_EXCL, argv); 
+				break; 
+
+			case 'n':
+				flagModifier(O_NOFOLLOW, argv); 
+				break; 
+
+			case 'b':
+				flagModifier(O_NONBLOCK, argv); 
+				break; 
+
+			case 'q':
+				flagModifier(O_RSYNC, argv); 
+				break; 
+
+			case 's':
+				flagModifier(O_SYNC, argv); 
+				break; 
+
+			case 't':
+				flagModifier(O_TRUNC, argv); 
+				break; 	
 
 			case 'v' :
 				curCount = 1; 
@@ -348,6 +402,14 @@ void fileFunction(char *argv[], int flag) {
 	current +=curCount;
 	counter++;
 
+}
+
+void flagModifier(int option, char *argv[]) { 
+	if(verboseFlag) {
+		verbosePrint(argv, curCount, current); 
+	}
+	optionalFlags |= option; 
+	current++; 
 }
 
 
