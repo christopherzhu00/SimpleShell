@@ -73,6 +73,8 @@ int main(int argc, char *argv[])
 		{"rdonly", required_argument, 0, 'r'},
 		{"sync", no_argument, 0, flag10},
 		{"trunc", no_argument, 0, flag11},
+		{"pause", no_argument, 0, 'g'}, 
+		{"close", required_argument, 0, 'u'}, 
 		{"verbose", no_argument, 0 , 'v'},
 		{"wronly", required_argument, 0, 'w'},
 		{"dsync", no_argument, 0, flag5},
@@ -217,6 +219,36 @@ int main(int argc, char *argv[])
 				flagModifier(O_TRUNC, argv); 
 				break; 	
 
+			case 'g':
+				curCount = 1; 
+				if(verboseFlag) 
+					verbosePrint(argv, curCount, current); 
+				pause(); 
+				break; 
+
+			case 'u':
+			curCount = 1; 
+			for(;;){
+				if(argv[current+curCount] == '\0'){ 
+					break; 
+				}
+				else if(argv[current+curCount][0] == '-' &&argv[current+curCount][1] == '-' )
+					break; 
+				curCount++; 
+			}
+			
+			if(verboseFlag)
+				verbosePrint(argv, curCount, current); 
+			int N = atoi(argv[current+1]); 
+			printf("the char value is: %s\n", argv[current+1]); 
+			printf("the int value is %d\n", N); 
+			close(arguments[N]); 
+			//current+=2; 
+			current += curCount; 
+			//counter++; 
+
+			break;
+
 			case 'v' :
 				curCount = 1; 
 				for(;;){
@@ -358,6 +390,8 @@ int main(int argc, char *argv[])
 			
 			if (ret == 1){
 				opt = getopt_long(argc, argv, "a", long_options, &option_index);
+				size++; 
+				current += (count+1);
 				continue;
 			}
 			
@@ -366,7 +400,7 @@ int main(int argc, char *argv[])
 			command_arg[1] = atoi(commandArgs[1]);
 			command_arg[2] = atoi(commandArgs[2]);
 			
-			for(i = 0; i < 3; i++)
+			/*for(i = 0; i < 3; i++)
 			{
 				if(command_arg[i] > counter)
 				{
@@ -374,8 +408,21 @@ int main(int argc, char *argv[])
 					opt = getopt_long(argc, argv, "a", long_options, &option_index);
 					continue;
 				}
-			}
+			}*/
 			
+
+			for(z=0; z < 3; z++) {
+				int open = fcntl(command_arg[z], F_GETFL); 
+				if(open < 0 || errno == EBADF) {
+					fprintf(stderr, "Error: Accessing nonopen file descriptor\n"); 
+					ret = 1; 
+					//size++; 
+					//current += (count+1);
+					opt = getopt_long(argc, argv, "a", long_options, &option_index);
+					continue; 
+				}
+			}
+
 			size_of_argument1 = 0;
 			size_of_argument2 = 0;
 			size_of_argument3 = 0;		
