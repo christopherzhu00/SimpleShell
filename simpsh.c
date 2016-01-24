@@ -18,6 +18,7 @@ int optionalFlags = 0;
 void verbosePrint(char *argv[], int curCount, int current); 
 void fileFunction(char *argv[], int flag);
 void flagModifier(int option, char *argv[]); 
+void sig_handler(int signum);
 
 
 int main(int argc, char *argv[])
@@ -41,28 +42,44 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	
+	enum flag
+		{
+			flag1,
+			flag2,
+			flag3,
+			flag4,
+			flag5,
+			flag6,
+			flag7,
+			flag8,
+			flag9,
+			flag10,
+			flag11,
+		};
+		
 	static struct option long_options[] = 
 	{
-		
-		
-		
 		{"abort", no_argument, 0, 'a'},
-		{"nonblock", no_argument, 0, 'b'},
+		{"nonblock", no_argument, 0, flag8},
 		{"command", required_argument, 0, 'c'},
-		{"directory", no_argument, 0, 'd'},
-		{"excl", no_argument, 0, 'e'},
+		{"directory", no_argument, 0, flag4},
+		{"excl", no_argument, 0, flag6},
 		{"rdwr", required_argument, 0, 'f'},
-		{"cloexec", no_argument, 0, 'l'}, 
-		{"creat", no_argument, 0, 'm'},
-		{"nofollow", no_argument, 0, 'n'},
-		{"append", no_argument, 0, 'p'},
-		{"rsync", no_argument, 0, 'q'},
+		{"cloexec", no_argument, 0, flag2}, 
+		{"creat", no_argument, 0, flag3},
+		{"nofollow", no_argument, 0, flag7},
+		{"append", no_argument, 0, flag1},
+		{"rsync", no_argument, 0, flag9},
 		{"rdonly", required_argument, 0, 'r'},
-		{"rsync", no_argument, 0, 's'},
-		{"trunc", no_argument, 0. 't'},
+		{"sync", no_argument, 0, flag10},
+		{"trunc", no_argument, 0, flag11},
 		{"verbose", no_argument, 0 , 'v'},
 		{"wronly", required_argument, 0, 'w'},
-		{"dsync", no_argument, 0, 'y'},
+		{"dsync", no_argument, 0, flag5},
+		{"wait", required_argument, 0, 'w'},		// 1/24
+		{"ignore", required_argument, 0, 'i'},
+		{"default", required_argument, 0, 'd'},
+		{"catch", required_argument, 0 , 't'},
 		 
 		{0, 0, 0, 0}
 	};
@@ -86,6 +103,7 @@ int main(int argc, char *argv[])
 	int z;
 	int i;
 	int fileD;
+	int signum;
 	
 	int SIZEOFARRAY;
 	  
@@ -110,7 +128,39 @@ int main(int argc, char *argv[])
 					verbosePrint(argv, curCount, current); 		
 				}
 				raise(SIGSEGV);
-
+			case 'd' :
+			//	printf("%s\n", argv[current + 1]);
+				
+				signum = atoi(argv[current + 1]);
+			//	printf("%d\n", signum);
+				signal(signum, SIG_DFL);
+				break;
+		
+			case 'i' :
+				signum = atoi(argv[current + 1]);
+				signal(signum, SIG_IGN);
+				break;
+				
+			case 't' :		// catch
+				signum = atoi(argv[current + 1]);
+				signal(signum, sig_handler(signum));
+				break;
+				
+		
+	/*		case 'w' :
+			//ITS JUST A THEORY
+				int status;
+				int exit_Value;
+				for(i = 0; i < counter; i++)
+				{
+					waitpid(-1, &status, 0)				
+					if(WIFEXITED(status))
+					{
+						exit_Value = WEXITSTATUS(status);
+						//print out the shit
+					}
+				}*/
+				
 			case 'r' :
 				fileFunction(argv, O_RDONLY); 
 				break;
@@ -123,47 +173,47 @@ int main(int argc, char *argv[])
 				fileFunction(argv, O_RDWR); 
 				break;
 
-			case 'p': 
+			case flag1: 
 				flagModifier(O_APPEND, argv); 
 				break; 
 
-			case 'l':
+			case flag2:
 				flagModifier(O_CLOEXEC, argv); 
 				break; 
 
-			case 'm':
+			case flag3:
 				flagModifier(O_CREAT, argv); 
 				break; 
 
-			case 'd':
+			case flag4:
 				flagModifier(O_DIRECTORY, argv); 
 				break; 
 
-			case 'y': 
+			case flag5: 
 				flagModifier(O_DSYNC, argv); 
 				break; 
 
-			case 'e':
+			case flag6:
 				flagModifier(O_EXCL, argv); 
 				break; 
 
-			case 'n':
+			case flag7:
 				flagModifier(O_NOFOLLOW, argv); 
 				break; 
 
-			case 'b':
+			case flag8:
 				flagModifier(O_NONBLOCK, argv); 
 				break; 
 
-			case 'q':
+			case flag9:
 				flagModifier(O_RSYNC, argv); 
 				break; 
 
-			case 's':
+			case flag10:
 				flagModifier(O_SYNC, argv); 
 				break; 
 
-			case 't':
+			case flag11:
 				flagModifier(O_TRUNC, argv); 
 				break; 	
 
@@ -315,7 +365,17 @@ int main(int argc, char *argv[])
 			command_arg[0] = atoi(commandArgs[0]);
 			command_arg[1] = atoi(commandArgs[1]);
 			command_arg[2] = atoi(commandArgs[2]);
-
+			
+			for(i = 0; i < 3; i++)
+			{
+				if(command_arg[i] > counter)
+				{
+					fprintf(stderr, "Error in arguments. Not enough file descriptors.\n");
+					opt = getopt_long(argc, argv, "a", long_options, &option_index);
+					continue;
+				}
+			}
+			
 			size_of_argument1 = 0;
 			size_of_argument2 = 0;
 			size_of_argument3 = 0;		
@@ -410,6 +470,12 @@ void flagModifier(int option, char *argv[]) {
 	}
 	optionalFlags |= option; 
 	current++; 
+}
+
+void sig_handler(int signum)
+{
+	fprintf(stderr, "The diagnostic signal is: %d", signum);
+	exit(signum);
 }
 
 
