@@ -98,6 +98,7 @@ int main(int argc, char *argv[])
 		{"ignore", required_argument, 0, 'i'},
 		{"default", required_argument, 0, 'd'},
 		{"catch", required_argument, 0 , 't'},
+		{"pipe", no_argument, 0, 'p'}, 
 		 
 		{0, 0, 0, 0}
 	};
@@ -146,19 +147,58 @@ int main(int argc, char *argv[])
 		char** commandArgs; 
 		switch(opt)
 		{
-			case 'a' :
+			case 'p':
+				curCount = 1; 
+				if(verboseFlag)
+					verbosePrint(argv, curCount, current);  
+				int temFD[2];
+				if(pipe(temFD) == -1){
+					fprintf(stderr, "Error: Failure to create pipes\n"); 
+					ret = 1; 
+					opt = getopt_long(argc, argv, "a", long_options, &option_index);
+					current+=curCount; 
+					continue; 
+				}
+				fdTable[counter++] = temFD[0]; 
+				size++; 
+				if(size == maxAlloc) {
+					maxAlloc *= 2;
+					fdTable = realloc(fdTable, maxAlloc * sizeof(char));
+				}
+				fdTable[counter++] = temFD[1]; 
+				current+=curCount; 
+				break; 
+
+			case 'a' :                                 //abort
 				curCount = 1;
 				if(verboseFlag)
 				{
 					verbosePrint(argv, curCount, current); 		
 				}
 				raise(SIGSEGV);
-			case 'd' :
+
+			case 'd' :                                //signal default
+			//	printf("%s\n", argv[current + 1]);
+				curCount = 1; 
+				if(verboseFlag)
+					verbosePrint(argv, curCount, current); 
+				for(;;){
+					if(argv[current+curCount] == '\0'){ 
+						break; 
+					}
+					else if(argv[current+curCount][0] == '-' &&argv[current+curCount][1] == '-' )
+						break; 
+					curCount++; 
+				}
+				if(curCount != 2){ 
+
+			}
+
 				signum = atoi(argv[current + 1]);
 				signal(signum, SIG_DFL);
 				break;
 		
-			case 'i' :
+			case 'i' :                                //signal ignore
 				signum = atoi(argv[current + 1]);
 				signal(signum, SIG_IGN);
 				break;
@@ -258,14 +298,14 @@ int main(int argc, char *argv[])
 				flagModifier(O_TRUNC, argv); 
 				break; 	
 
-			case 'g':      //pause
+			case 'g':                                       //pause
 				curCount = 1; 
 				if(verboseFlag) 
 					verbosePrint(argv, curCount, current); 
 				pause(); 
 				break; 
 
-			case 'u':  //close 
+			case 'u':                                        //close 
 			curCount = 1; 
 			for(;;){
 				if(argv[current+curCount] == '\0'){ 
@@ -304,7 +344,6 @@ int main(int argc, char *argv[])
 				continue; 
 			}
 			int open = fcntl(fdTable[N], F_GETFL); 
-			printf("open is: %d\n", open); 
 			if(open < 0 || errno == EBADF) {
 				fprintf(stderr, "Error: Accessing nonopen file descriptor\n"); 
 				ret = 1; 
@@ -313,9 +352,8 @@ int main(int argc, char *argv[])
 				opt = getopt_long(argc, argv, "a", long_options, &option_index);
 				continue; 
 				}
-			printf("the char value is: %s\n", argv[current+1]); 
-			printf("the int value is %d\n", N); 
 			close(fdTable[N]); 
+			open = fcntl(fdTable[N], F_GETFL);
 			//current+=2; 
 			current += curCount; 
 			//counter++; 
@@ -490,17 +528,21 @@ int main(int argc, char *argv[])
 			
 
 			for(z=0; z < 3; z++) {
-				int open = fcntl(command_arg[z], F_GETFL); 
+				int open = fcntl(fdTable[command_arg[z]], F_GETFL); 
 				if(open < 0 || errno == EBADF) {
-					fprintf(stderr, "Error: Accessing nonopen file descriptor\n"); 
+					fprintf(stderr, "Error: Accessing nonopen file descriptor!\n"); 
 					ret = 1; 
-					//size++; 
-					//current += (count+1);
+					size++; 
+					current += (count+1);
+					error = 1; 
 					opt = getopt_long(argc, argv, "a", long_options, &option_index);
-					continue; 
+					break; 
 				}
 			}
-
+			if(error == 1) { 
+				error = 0; 
+				continue; 
+			}
 			size_of_argument1 = 0;
 			size_of_argument2 = 0;
 			size_of_argument3 = 0;		
@@ -519,21 +561,26 @@ int main(int argc, char *argv[])
 				
 			if (Child_PID == 0) { 
 					
-				for(i = 0; i < 3; i++)
-				{
-					fileD = command_arg[i];
-					dup2(fdTable[fileD], i);
+					for(i = 0; i < 3; i++)
+					{
+						fileD = command_arg[i];
+						dup2(fdTable[fileD], i);
+					}
+
+					for(i = 0; i < counter; i++)
+					{
+						close(fdTable[i]);
+					}
+								//UPDATE THIS WITH NEW ARRAY
+					execvp(commandArgs[3], &commandArgs[3]);
 				}
-								
-				execvp(commandArgs[3], &commandArgs[3]);
-			}
-			else if (Child_PID > 0) {
-				//its a parent
-			}
-			else {
-				//shit hit the fan
-				printf("Messed up forking.\n"); 
-				ret =1; 
+				else if (Child_PID > 0) {
+					//its a parent
+				}
+				else {
+					//shit hit the fan
+					printf("Messed up forking.\n"); 
+					ret =1; 
 			}
 			break;
 		}
