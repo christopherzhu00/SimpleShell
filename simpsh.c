@@ -10,9 +10,11 @@
 
 int* fdTable;
 int counter = 0;
+int childCounter = 0;
 int verboseFlag = 0;
 int ret = 0;
 int current = 1;
+pid_t current_pid;
 int curCount;
 int optionalFlags = 0; 
 int error = 0; 
@@ -21,6 +23,14 @@ void fileFunction(char *argv[], int flag);
 void flagModifier(int option, char *argv[]); 
 void sig_handler(int signum);
 
+struct pidStorage
+{
+	pid_t pid;
+	char** arg_start;
+	int size;
+};
+
+struct pidStorage *bank;
 
 int main(int argc, char *argv[])
 {
@@ -39,10 +49,15 @@ int main(int argc, char *argv[])
 	fdTable = malloc(sizeof(int) * 1000000);
 	if (fdTable == NULL)
 	{
-		fprintf(stderr, "No space of the array");
+		fprintf(stderr, "No space for the array of file descriptors");
 		exit(1);
 	}
-	
+	bank = malloc(sizeof(struct pidStorage) * 1000000);
+	if (bank == NULL)
+	{
+		fprintf(stderr, "No space for the array of structs");
+		exit(1);
+	}
 	enum flag
 		{
 			flag1,
@@ -79,7 +94,7 @@ int main(int argc, char *argv[])
 		{"verbose", no_argument, 0 , 'v'},
 		{"wronly", required_argument, 0, 'w'},
 		{"dsync", no_argument, 0, flag5},
-		{"wait", required_argument, 0, 'w'},		// 1/24
+		{"wait", required_argument, 0, 'z'},		
 		{"ignore", required_argument, 0, 'i'},
 		{"default", required_argument, 0, 'd'},
 		{"catch", required_argument, 0 , 't'},
@@ -105,19 +120,26 @@ int main(int argc, char *argv[])
 	int failure = 0;
 	int z;
 	int i;
+	int c;			// used to iterate through command args for wait
 	int fileD;
 	int signum;
 	
 	int SIZEOFARRAY;
 	  
 	int fd; 
+	int string_size = 0;
+	
+	int status;
+	int exit_Value;
+	struct pidStorage quack;
 
 	while(opt != -1)
 	{
 		if(size == maxAlloc)
 		{
 			maxAlloc *= 2;
-			fdTable = realloc(fdTable, maxAlloc * sizeof(char));	
+			fdTable = realloc(fdTable, maxAlloc * sizeof(char));
+			bank = realloc(bank, maxAlloc * sizeof(struct pidStorage));
 		}			
 		
 		int maxChars = 100; 
@@ -132,10 +154,7 @@ int main(int argc, char *argv[])
 				}
 				raise(SIGSEGV);
 			case 'd' :
-			//	printf("%s\n", argv[current + 1]);
-				
 				signum = atoi(argv[current + 1]);
-			//	printf("%d\n", signum);
 				signal(signum, SIG_DFL);
 				break;
 		
@@ -144,26 +163,45 @@ int main(int argc, char *argv[])
 				signal(signum, SIG_IGN);
 				break;
 				
-			/*case 't' :		// catch
+			case 't' :		// catch
 				signum = atoi(argv[current + 1]);
-				signal(signum, sig_handler(signum));
-				break;*/
+				signal(signum, sig_handler);
+				break;
 				
 		
-	/*		case 'w' :
-			//ITS JUST A THEORY
-				int status;
-				int exit_Value;
-				for(i = 0; i < counter; i++)
+			case 'z' :
+				curCount = 1;
+				if(verboseFlag)
 				{
-					waitpid(-1, &status, 0)				
+					verbosePrint(argv, curCount, current);
+				}
+				for(i = 0; i < childCounter; i++)
+				{
+					current_pid = waitpid(-1, &status, 0);		
 					if(WIFEXITED(status))
 					{
 						exit_Value = WEXITSTATUS(status);
-						//print out the shit
+						printf("%d ", exit_Value);
+						//print out the exit value
 					}
-				}*/
-				
+					for(z = 0; z < childCounter; z++)
+					{
+						if(bank[z].pid == current_pid)			// look for corresponding info in the bank
+						{
+							quack = bank[z];
+						}
+					}
+					for(z = 0; z < quack.size; z++)
+					{
+						for(c = 0; quack.arg_start[z][c] != '\0'; c++)	// calculate the size of the argument
+						{
+							printf("%s", quack.arg_start[z][c]);
+						}
+						printf(" ");		// separate the arguments
+					}
+					printf("\n");
+				}
+				break;
 			case 'r' :
 				fileFunction(argv, O_RDONLY); 
 				break;
@@ -296,7 +334,7 @@ int main(int argc, char *argv[])
 				}
 				if(verboseFlag)
 				{			
-					verbosePrint(argv, curCount, current); 				// BE SURE TO TAKE THIS OUT LATER MAYBE?>?!?!?!?!?!?!?!!?!??????????????????????????????????????
+					verbosePrint(argv, curCount, current); 			
 				}
 				if(curCount != 1){ 
 					fprintf(stderr, "Incorrect number of arguments\n"); 
@@ -398,7 +436,7 @@ int main(int argc, char *argv[])
 			
 			
 			for(z = 0; z < size_of_argument1; z++)
-			{              //NEW CREATED ARRAY
+			{              
 				if(!(isdigit(commandArgs[0][z])))
 				{
 					fprintf(stderr, "Error in arguments. Invalid argument.\n");
@@ -409,7 +447,7 @@ int main(int argc, char *argv[])
 				
 			}
 			for(z = 0; z < size_of_argument2; z++)
-			{						//UPDATE
+			{						
 			if(!(isdigit(commandArgs[1][z])))
 				{
 				fprintf(stderr, "Error in arguments. Invalid argument.\n");
@@ -418,7 +456,7 @@ int main(int argc, char *argv[])
 				}
 			}
 			for(z = 0; z < size_of_argument3; z++)
-			{					//UPDATE
+			{					
 			if(!(isdigit(commandArgs[2][z])))
 				{
 					fprintf(stderr, "Error in arguments. Invalid argument.\n");
@@ -471,28 +509,33 @@ int main(int argc, char *argv[])
 			current += (count+1);
 
 			optind+= count-1; 
+		
 				
+			pid_t Child_PID = fork(); 
+			bank[childCounter].pid = Child_PID; 			// adding values for the struct
+			bank[childCounter].arg_start = &commandArgs[3];
+			bank[childCounter].size = count - 3;	// factor in subtract the 3 initial args for command
+			childCounter++;
 				
-				pid_t Child_PID = fork(); 
-				if (Child_PID == 0) { 
+			if (Child_PID == 0) { 
 					
-					for(i = 0; i < 3; i++)
-					{
-						fileD = command_arg[i];
-						dup2(fdTable[fileD], i);
-					}
-								//UPDATE THIS WITH NEW ARRAY
-					execvp(commandArgs[3], &commandArgs[3]);
+				for(i = 0; i < 3; i++)
+				{
+					fileD = command_arg[i];
+					dup2(fdTable[fileD], i);
 				}
-				else if (Child_PID > 0) {
-					//its a parent
-				}
-				else {
-					//shit hit the fan
-					printf("Messed up forking.\n"); 
-					ret =1; 
-				}
-				break;
+								
+				execvp(commandArgs[3], &commandArgs[3]);
+			}
+			else if (Child_PID > 0) {
+				//its a parent
+			}
+			else {
+				//shit hit the fan
+				printf("Messed up forking.\n"); 
+				ret =1; 
+			}
+			break;
 		}
 		size++;
 		
