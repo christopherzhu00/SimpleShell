@@ -8,13 +8,14 @@
 #include <errno.h>
 #include <signal.h>
 
-int* arguments;
+int* fdTable;
 int counter = 0;
 int verboseFlag = 0;
 int ret = 0;
 int current = 1;
 int curCount;
 int optionalFlags = 0; 
+int error = 0; 
 void verbosePrint(char *argv[], int curCount, int current); 
 void fileFunction(char *argv[], int flag);
 void flagModifier(int option, char *argv[]); 
@@ -35,8 +36,8 @@ int main(int argc, char *argv[])
 	int size = 0;
 	
 	
-	arguments = malloc(sizeof(int) * 1000000);
-	if (arguments == NULL)
+	fdTable = malloc(sizeof(int) * 1000000);
+	if (fdTable == NULL)
 	{
 		fprintf(stderr, "No space of the array");
 		exit(1);
@@ -116,7 +117,7 @@ int main(int argc, char *argv[])
 		if(size == maxAlloc)
 		{
 			maxAlloc *= 2;
-			arguments = realloc(arguments, maxAlloc * sizeof(char));	
+			fdTable = realloc(fdTable, maxAlloc * sizeof(char));	
 		}			
 		
 		int maxChars = 100; 
@@ -143,10 +144,10 @@ int main(int argc, char *argv[])
 				signal(signum, SIG_IGN);
 				break;
 				
-			case 't' :		// catch
+			/*case 't' :		// catch
 				signum = atoi(argv[current + 1]);
 				signal(signum, sig_handler(signum));
-				break;
+				break;*/
 				
 		
 	/*		case 'w' :
@@ -219,14 +220,14 @@ int main(int argc, char *argv[])
 				flagModifier(O_TRUNC, argv); 
 				break; 	
 
-			case 'g':
+			case 'g':      //pause
 				curCount = 1; 
 				if(verboseFlag) 
 					verbosePrint(argv, curCount, current); 
 				pause(); 
 				break; 
 
-			case 'u':
+			case 'u':  //close 
 			curCount = 1; 
 			for(;;){
 				if(argv[current+curCount] == '\0'){ 
@@ -239,10 +240,44 @@ int main(int argc, char *argv[])
 			
 			if(verboseFlag)
 				verbosePrint(argv, curCount, current); 
+			int j = 0; 
+			while(argv[current+1][j] != '\0') {
+				if(!isdigit(argv[current+1][j])) {
+					fprintf(stderr, "Error: Incorrect arguments.\n"); 
+					ret = 1; 
+					error = 1; 
+					break; 
+				}
+				j++; 
+			}
+			if(error == 1) {
+				current+=curCount; 
+				opt = getopt_long(argc, argv, "a", long_options, &option_index);
+				error = 0; 
+				continue; 
+			}
 			int N = atoi(argv[current+1]); 
+			if(N >= counter) {
+				fprintf(stderr, "Error: File descriptor has not been opened.\n"); 
+				ret = 1;
+				opt = getopt_long(argc, argv, "a", long_options, &option_index);
+				current+=curCount; 
+				size++; 
+				continue; 
+			}
+			int open = fcntl(fdTable[N], F_GETFL); 
+			printf("open is: %d\n", open); 
+			if(open < 0 || errno == EBADF) {
+				fprintf(stderr, "Error: Accessing nonopen file descriptor\n"); 
+				ret = 1; 
+				size++; 
+				current += curCount;
+				opt = getopt_long(argc, argv, "a", long_options, &option_index);
+				continue; 
+				}
 			printf("the char value is: %s\n", argv[current+1]); 
 			printf("the int value is %d\n", N); 
-			close(arguments[N]); 
+			close(fdTable[N]); 
 			//current+=2; 
 			current += curCount; 
 			//counter++; 
@@ -338,6 +373,7 @@ int main(int argc, char *argv[])
 			//error checking to see if they put in enough stuff (commmand 0 1 2 blah)
 			if(count < 4)
 			{ 
+				//printf("The count is: %d\n", count); 
 				fprintf(stderr, "Error in arguments. Not enough arguments.\n");
 				ret =1;  
 				opt = getopt_long(argc, argv, "a", long_options, &option_index);
@@ -366,6 +402,7 @@ int main(int argc, char *argv[])
 				if(!(isdigit(commandArgs[0][z])))
 				{
 					fprintf(stderr, "Error in arguments. Invalid argument.\n");
+					error = 1; 
 					ret = 1; 
 				}
 					
@@ -376,6 +413,7 @@ int main(int argc, char *argv[])
 			if(!(isdigit(commandArgs[1][z])))
 				{
 				fprintf(stderr, "Error in arguments. Invalid argument.\n");
+					error = 1; 
 					ret =1; 
 				}
 			}
@@ -384,13 +422,15 @@ int main(int argc, char *argv[])
 			if(!(isdigit(commandArgs[2][z])))
 				{
 					fprintf(stderr, "Error in arguments. Invalid argument.\n");
+					error = 1; 
 					ret =1; 
 				}
 			}
 			
-			if (ret == 1){
+			if (error == 1){
 				opt = getopt_long(argc, argv, "a", long_options, &option_index);
 				size++; 
+				error = 0; 
 				current += (count+1);
 				continue;
 			}
@@ -439,7 +479,7 @@ int main(int argc, char *argv[])
 					for(i = 0; i < 3; i++)
 					{
 						fileD = command_arg[i];
-						dup2(arguments[fileD], i);
+						dup2(fdTable[fileD], i);
 					}
 								//UPDATE THIS WITH NEW ARRAY
 					execvp(commandArgs[3], &commandArgs[3]);
@@ -504,7 +544,7 @@ void fileFunction(char *argv[], int flag) {
 	}
 	else
 	{
-		arguments[counter] = fd;
+		fdTable[counter] = fd;
 	}
 	current +=curCount;
 	counter++;
