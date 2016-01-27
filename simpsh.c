@@ -18,10 +18,15 @@ int current = 1;
 int curCount;
 int optionalFlags = 0; 
 int error = 0; 
+int exit_status = 0; 
+int exit_holder = 0; 
 void verbosePrint(char *argv[], int curCount, int current); 
 void fileFunction(char *argv[], int flag);
 void flagModifier(int option, char *argv[]); 
 void sig_handler(int signum);
+int argumentNumberCheck(char *argv[]);
+int argumentDigitCheck(char *argv[]); 
+void exitStatusChecker(); 
 
 struct pidStorage
 {
@@ -133,7 +138,6 @@ int main(int argc, char *argv[])
 	
 	int status;
 	int exit_Value;
-	struct pidStorage quack;
 
 	while(opt != -1)
 	{
@@ -148,12 +152,25 @@ int main(int argc, char *argv[])
 		char** commandArgs; 
 		switch(opt)
 		{
-			case 'p':
+			case 'p':                                     //pipes 
 				curCount = 1; 
+				argumentNumberCheck(argv);
+
 				if(verboseFlag)
 					verbosePrint(argv, curCount, current);  
+
+				if(curCount != 1){
+					fprintf(stderr, "Error: Pipe takes no arguments\n"); 
+					ret = 1; 
+					opt = getopt_long(argc, argv, "a", long_options, &option_index);
+					current+=curCount; 
+					continue; 
+				}
+
 				int temFD[2];
-				if(pipe(temFD) == -1){
+				exit_holder = pipe(temFD); 
+				exitStatusChecker(); 
+				if(exit_holder == -1){
 					fprintf(stderr, "Error: Failure to create pipes\n"); 
 					ret = 1; 
 					opt = getopt_long(argc, argv, "a", long_options, &option_index);
@@ -172,55 +189,120 @@ int main(int argc, char *argv[])
 
 			case 'a' :                                 //abort
 				curCount = 1;
+				argumentNumberCheck(argv);
+				
 				if(verboseFlag)
 				{
 					verbosePrint(argv, curCount, current); 		
 				}
-				current += 1;
-				raise(SIGSEGV);
+				if(curCount != 1){
+					fprintf(stderr, "Error: Abort takes no arguments\n"); 
+					ret = 1; 
+					opt = getopt_long(argc, argv, "a", long_options, &option_index);
+					current+=curCount; 
+					continue; 
+				}
+				exit_holder = raise(SIGSEGV);
+				exitStatusChecker(); 
+				break; 
 
 			case 'd' :                                //signal default
 				curCount = 1; 
+				argumentNumberCheck(argv);
 				if(verboseFlag)
 					verbosePrint(argv, curCount, current); 
-				for(;;){
-					if(argv[current+curCount] == '\0'){ 
-						break; 
-					}
-					else if(argv[current+curCount][0] == '-' &&argv[current+curCount][1] == '-' )
-						break; 
-					curCount++; 
+				if(curCount != 2 || argumentDigitCheck(argv) == 0){ 
+					fprintf(stderr, "Error: Incorrent Argument Syntax\n"); 
+					ret = 1; 
+					opt = getopt_long(argc, argv, "a", long_options, &option_index);
+					current+=curCount;
+					continue; 
 				}
-				if(curCount != 2){ 
-
-			}
 
 				signum = atoi(argv[current + 1]);
-				//check if valid number
-				//check if "--default hello"
-				signal(signum, SIG_DFL);
-				current +=2;
+				if(signum > 65) {
+					fprintf(stderr, "Error: Incorrent Argument Syntax\n"); 
+					ret = 1; 
+					opt = getopt_long(argc, argv, "a", long_options, &option_index);
+					current+=curCount; 
+					continue; 
+				}
+				signal(signum, SIG_DFL); 
+				exit_holder = signum; 
+				exitStatusChecker();
+				current+=curCount;
 				break;
 		
 			case 'i' :                                //signal ignore
+				curCount = 1;
+				argumentNumberCheck(argv);
+				if(curCount != 2 || argumentDigitCheck(argv) == 0){ 
+					fprintf(stderr, "Error: N is beyond range of signals\n"); 
+					ret = 1; 
+					opt = getopt_long(argc, argv, "a", long_options, &option_index);
+					current+=curCount; 
+					continue; 
+				}
+
+				if(verboseFlag) 
+					verbosePrint(argv, curCount, current); 
+
 				signum = atoi(argv[current + 1]);
-				current +=2;
+				if(signum > 65) {
+					fprintf(stderr, "Error: N is beyond range of signals\n"); 
+					ret = 1; 
+					opt = getopt_long(argc, argv, "a", long_options, &option_index);
+					current+=curCount; 
+					continue; 
+				}
 				signal(signum, SIG_IGN);
+				exit_holder = signum; 
+				exitStatusChecker();
+				current+=curCount; 
 				break;
 				
 			case 't' :		// catch
+				curCount = 1; 
+				argumentNumberCheck(argv);
+				if(curCount != 2 || argumentDigitCheck(argv) == 0){ 
+					fprintf(stderr, "Error: N is beyond range of signals\n"); 
+					ret = 1; 
+					opt = getopt_long(argc, argv, "a", long_options, &option_index);
+					current+=curCount; 
+					continue; 
+				}
+				if(verboseFlag)
+					verbosePrint(argv, curCount, current); 
+
 				signum = atoi(argv[current + 1]);
-				signal(signum, sig_handler);
-				current +=2;
+				if(signum > 65) {
+					fprintf(stderr, "Error: Incorrent Argument Syntax\n"); 
+					ret = 1; 
+					opt = getopt_long(argc, argv, "a", long_options, &option_index);
+					current+=curCount; 
+					continue; 
+				}
+				signal(signum, sig_handler); 
+				exit_holder = signum; 
+				exitStatusChecker();
+				current +=curCount;
 				break;
 				
-		
-			case 'z' : {
-				for(i = 0; i < counter; i++)
+			case 'z' : {                           //wait  
+				for(i = 0; i < counter; i++)        //not sure where to put exit status here
 					{
 						close(fdTable[i]);
 					}
 				curCount = 1;
+				argumentNumberCheck(argv); 
+				if(curCount != 1) {
+					fprintf(stderr, "Error: Wait does not take arguments\n"); 
+					ret = 1; 
+					opt = getopt_long(argc, argv, "a", long_options, &option_index);
+					current+=curCount; 
+					continue; 
+				}
+				
 				if(verboseFlag)
 				{
 					verbosePrint(argv, curCount, current);
@@ -256,12 +338,12 @@ int main(int argc, char *argv[])
 						}
 						if(a != bank[z].size-1)
 						{
-						printf(" ");
+							printf(" ");
 						}	
 					}
 					printf("\n");
-				}
-	
+				}	
+				current+=curCount;
 				break;
 			}
 			case 'r' :
@@ -322,38 +404,33 @@ int main(int argc, char *argv[])
 
 			case 'g':                                       //pause
 				curCount = 1; 
+				argumentNumberCheck(argv);
+				
+				if(curCount != 1) {
+					fprintf(stderr, "Error: Pause does not take an argument\n"); 
+					ret = 1; 
+					opt = getopt_long(argc, argv, "a", long_options, &option_index);
+					current+=curCount;
+					continue; 
+				}
 				if(verboseFlag) 
 					verbosePrint(argv, curCount, current); 
-				pause(); 
+				exit_holder = pause(); 
+				exitStatusChecker(); 
+				current+=curCount;
 				break; 
 
 			case 'u':                                        //close 
 			curCount = 1; 
-			for(;;){
-				if(argv[current+curCount] == '\0'){ 
-					break; 
-				}
-				else if(argv[current+curCount][0] == '-' &&argv[current+curCount][1] == '-' )
-					break; 
-				curCount++; 
-			}
+			argumentNumberCheck(argv);
 			
 			if(verboseFlag)
 				verbosePrint(argv, curCount, current); 
-			int j = 0; 
-			while(argv[current+1][j] != '\0') {
-				if(!isdigit(argv[current+1][j])) {
-					fprintf(stderr, "Error: Incorrect arguments.\n"); 
-					ret = 1; 
-					error = 1; 
-					break; 
-				}
-				j++; 
-			}
-			if(error == 1) {
-				current+=curCount; 
+			
+			if(curCount != 2 || argumentDigitCheck(argv) == 0){ 
+				fprintf(stderr, "Error: Incorrent Argument Syntax\n"); 
 				opt = getopt_long(argc, argv, "a", long_options, &option_index);
-				error = 0; 
+				current+=curCount;
 				continue; 
 			}
 			int N = atoi(argv[current+1]); 
@@ -374,29 +451,24 @@ int main(int argc, char *argv[])
 				opt = getopt_long(argc, argv, "a", long_options, &option_index);
 				continue; 
 				}
-			close(fdTable[N]); 
-			open = fcntl(fdTable[N], F_GETFL);
+			exit_holder = close(fdTable[N]); 
+			exitStatusChecker(); 
+			//open = fcntl(fdTable[N], F_GETFL);
 			//current+=2; 
 			current += curCount; 
 			//counter++; 
 
 			break;
 
-			case 'v' :
+			case 'v' :                               //verbose
 				curCount = 1; 
-				for(;;){
-					if(argv[current+curCount] == '\0'){ 
-						break; 
-					}
-					else if(argv[current+curCount][0] == '-' &&argv[current+curCount][1] == '-' )
-						break; 
-					curCount++; 
-				}
+				argumentNumberCheck(argv);
+		
 				if(verboseFlag)
 				{			
 					verbosePrint(argv, curCount, current); 			
 				}
-				if(curCount != 1){ 
+				if(curCount != 1){         //if verbose has arguments, should it still beset?
 					fprintf(stderr, "Incorrect number of arguments\n"); 
 					ret =1; 
 				}
@@ -458,8 +530,6 @@ int main(int argc, char *argv[])
 			}
 			commandArgs[count] = NULL;  
 			 
-			// special case since option_index_placeholder stores the next command beginning and not its arguments
-			
 			// CURRENT HOLDS INDEX AT COMMAND
 			// PRINTS THROUGH THE ARRAY IF VERBOSE IS ON
 			
@@ -470,7 +540,7 @@ int main(int argc, char *argv[])
 			//error checking to see if they put in enough stuff (commmand 0 1 2 blah)
 			if(count < 4)
 			{ 
-				fprintf(stderr, "Error in arguments. Not enough arguments. QUACK\n");
+				fprintf(stderr, "Error in arguments. Not enough arguments.\n");
 				ret =1;  
 				opt = getopt_long(argc, argv, "a", long_options, &option_index);
 				continue;
@@ -497,7 +567,7 @@ int main(int argc, char *argv[])
 			{              
 				if(!(isdigit(commandArgs[0][z])))
 				{
-					fprintf(stderr, "Error in arguments. Invalid argument.quiet quack\n");
+					fprintf(stderr, "Error in arguments. Invalid argument.\n");
 					error = 1; 
 					ret = 1; 
 				}
@@ -508,7 +578,7 @@ int main(int argc, char *argv[])
 			{						
 			if(!(isdigit(commandArgs[1][z])))
 				{
-				fprintf(stderr, "Error in arguments. Invalid argument.quiet quack12\n");
+				fprintf(stderr, "Error in arguments. Invalid argument.\n");
 					error = 1; 
 					ret =1; 
 				}
@@ -517,7 +587,7 @@ int main(int argc, char *argv[])
 			{					
 			if(!(isdigit(commandArgs[2][z])))
 				{
-					fprintf(stderr, "Error in arguments. Invalid argument.quiet quack 9\n");
+					fprintf(stderr, "Error in arguments. Invalid argument.\n");
 					error = 1; 
 					ret =1; 
 				}
@@ -531,7 +601,6 @@ int main(int argc, char *argv[])
 				continue;
 			}
 			
-								//UPDATE THIS ONE TOO
 			command_arg[0] = atoi(commandArgs[0]);
 			command_arg[1] = atoi(commandArgs[1]);
 			command_arg[2] = atoi(commandArgs[2]);
@@ -556,7 +625,6 @@ int main(int argc, char *argv[])
 			size_of_argument2 = 0;
 			size_of_argument3 = 0;		
 
-			// MIGHT NEED TO UPDATE
 			current += (count+1);
 
 			optind+= count-1; 
@@ -597,7 +665,7 @@ int main(int argc, char *argv[])
 		
 		opt = getopt_long(argc, argv, "a", long_options, &option_index);
 	}
-	exit(ret);
+	exit(exit_status);
 }
 
 void verbosePrint(char *argv[], int curCount, int current) {
@@ -639,7 +707,8 @@ void fileFunction(char *argv[], int flag) {
 	if(fd == -1)
 	{
 		fprintf(stderr, "Error in opening file.\n");
-		ret =1; 
+		if(exit_status == 0)
+			exit_status = fd; 
 	}
 	else
 	{
@@ -662,6 +731,34 @@ void sig_handler(int signum)
 {
 	fprintf(stderr, "Caught signal: %d\n", signum);
 	exit(signum);
+}
+
+int argumentNumberCheck(char *argv[]) {
+	for(;;){
+		if(argv[current+curCount] == '\0'){ 
+			break; 
+		}
+		else if(argv[current+curCount][0] == '-' &&argv[current+curCount][1] == '-' )
+			break; 
+		curCount++; 
+	}
+	return curCount; 
+}
+
+int argumentDigitCheck(char *argv[]) {
+	int j = 0; 
+	while(argv[current+1][j] != '\0') {
+		if(!isdigit(argv[current+1][j])) {
+			return 0; 
+		}
+		j++; 
+	}
+	return 1; 
+}
+
+void exitStatusChecker() {
+	if(exit_holder > exit_status)
+		exit_status = exit_holder; 
 }
 
 
