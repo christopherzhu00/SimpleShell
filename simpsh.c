@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <signal.h>
+#include <sys/wait.h>
 
 int* fdTable;
 int counter = 0;
@@ -14,7 +15,6 @@ int childCounter = 0;
 int verboseFlag = 0;
 int ret = 0;
 int current = 1;
-pid_t current_pid;
 int curCount;
 int optionalFlags = 0; 
 int error = 0; 
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 		{"verbose", no_argument, 0 , 'v'},
 		{"wronly", required_argument, 0, 'w'},
 		{"dsync", no_argument, 0, flag5},
-		{"wait", required_argument, 0, 'z'},		
+		{"wait", no_argument, 0, 'z'},		
 		{"ignore", required_argument, 0, 'i'},
 		{"default", required_argument, 0, 'd'},
 		{"catch", required_argument, 0 , 't'},
@@ -122,6 +122,7 @@ int main(int argc, char *argv[])
 	int z;
 	int i;
 	int c;			// used to iterate through command args for wait
+	int a;
 	int fileD;
 	int signum;
 	
@@ -175,10 +176,10 @@ int main(int argc, char *argv[])
 				{
 					verbosePrint(argv, curCount, current); 		
 				}
+				current += 1;
 				raise(SIGSEGV);
 
 			case 'd' :                                //signal default
-			//	printf("%s\n", argv[current + 1]);
 				curCount = 1; 
 				if(verboseFlag)
 					verbosePrint(argv, curCount, current); 
@@ -195,53 +196,74 @@ int main(int argc, char *argv[])
 			}
 
 				signum = atoi(argv[current + 1]);
+				//check if valid number
+				//check if "--default hello"
 				signal(signum, SIG_DFL);
+				current +=2;
 				break;
 		
 			case 'i' :                                //signal ignore
 				signum = atoi(argv[current + 1]);
+				current +=2;
 				signal(signum, SIG_IGN);
 				break;
 				
 			case 't' :		// catch
 				signum = atoi(argv[current + 1]);
 				signal(signum, sig_handler);
+				current +=2;
 				break;
 				
 		
-			case 'z' :
+			case 'z' : {
+				for(i = 0; i < counter; i++)
+					{
+						close(fdTable[i]);
+					}
 				curCount = 1;
 				if(verboseFlag)
 				{
 					verbosePrint(argv, curCount, current);
 				}
-				for(i = 0; i < childCounter; i++)
+				for(z = 0; z < childCounter; z++)
 				{
-					current_pid = waitpid(-1, &status, 0);		
+					waitpid(bank[z].pid, &status, 0);
 					if(WIFEXITED(status))
 					{
-						exit_Value = WEXITSTATUS(status);
-						printf("%d ", exit_Value);
+						int ret_val = WEXITSTATUS(status);
+						if (ret < ret_val) {
+							ret = ret_val;
+						}
+						printf("%d ", ret);
 						//print out the exit value
 					}
-					for(z = 0; z < childCounter; z++)
+					else if (WIFSIGNALED(status))
 					{
-						if(bank[z].pid == current_pid)			// look for corresponding info in the bank
+						int sig_num = WTERMSIG(status);
+						if (ret == 0)
 						{
-							quack = bank[z];
+							ret = 1;
 						}
+						
+						raise(sig_num);
+						printf("%d ", ret);
 					}
-					for(z = 0; z < quack.size; z++)
+					for(a = 0; a < bank[z].size; a++)
 					{
-						for(c = 0; quack.arg_start[z][c] != '\0'; c++)	// calculate the size of the argument
+						for(c = 0; bank[z].arg_start[a][c] != '\0'; c++)	// calculate the size of the argument
 						{
-							printf("%s", quack.arg_start[z][c]);
+							printf("%c", bank[z].arg_start[a][c]);
 						}
-						printf(" ");		// separate the arguments
+						if(a != bank[z].size-1)
+						{
+						printf(" ");
+						}	
 					}
 					printf("\n");
 				}
+	
 				break;
+			}
 			case 'r' :
 				fileFunction(argv, O_RDONLY); 
 				break;
@@ -445,12 +467,10 @@ int main(int argc, char *argv[])
 			{
 				verbosePrint(argv, count+1, current); 
 			}
-			
 			//error checking to see if they put in enough stuff (commmand 0 1 2 blah)
 			if(count < 4)
 			{ 
-				//printf("The count is: %d\n", count); 
-				fprintf(stderr, "Error in arguments. Not enough arguments.\n");
+				fprintf(stderr, "Error in arguments. Not enough arguments. QUACK\n");
 				ret =1;  
 				opt = getopt_long(argc, argv, "a", long_options, &option_index);
 				continue;
@@ -477,7 +497,7 @@ int main(int argc, char *argv[])
 			{              
 				if(!(isdigit(commandArgs[0][z])))
 				{
-					fprintf(stderr, "Error in arguments. Invalid argument.\n");
+					fprintf(stderr, "Error in arguments. Invalid argument.quiet quack\n");
 					error = 1; 
 					ret = 1; 
 				}
@@ -488,7 +508,7 @@ int main(int argc, char *argv[])
 			{						
 			if(!(isdigit(commandArgs[1][z])))
 				{
-				fprintf(stderr, "Error in arguments. Invalid argument.\n");
+				fprintf(stderr, "Error in arguments. Invalid argument.quiet quack12\n");
 					error = 1; 
 					ret =1; 
 				}
@@ -497,7 +517,7 @@ int main(int argc, char *argv[])
 			{					
 			if(!(isdigit(commandArgs[2][z])))
 				{
-					fprintf(stderr, "Error in arguments. Invalid argument.\n");
+					fprintf(stderr, "Error in arguments. Invalid argument.quiet quack 9\n");
 					error = 1; 
 					ret =1; 
 				}
@@ -515,17 +535,6 @@ int main(int argc, char *argv[])
 			command_arg[0] = atoi(commandArgs[0]);
 			command_arg[1] = atoi(commandArgs[1]);
 			command_arg[2] = atoi(commandArgs[2]);
-			
-			/*for(i = 0; i < 3; i++)
-			{
-				if(command_arg[i] > counter)
-				{
-					fprintf(stderr, "Error in arguments. Not enough file descriptors.\n");
-					opt = getopt_long(argc, argv, "a", long_options, &option_index);
-					continue;
-				}
-			}*/
-			
 
 			for(z=0; z < 3; z++) {
 				int open = fcntl(fdTable[command_arg[z]], F_GETFL); 
@@ -571,7 +580,7 @@ int main(int argc, char *argv[])
 					{
 						close(fdTable[i]);
 					}
-								//UPDATE THIS WITH NEW ARRAY
+								
 					execvp(commandArgs[3], &commandArgs[3]);
 				}
 				else if (Child_PID > 0) {
@@ -625,7 +634,7 @@ void fileFunction(char *argv[], int flag) {
 	}
 	
 	flag |= optionalFlags; 
-	int fd = open(optarg, flag);
+	int fd = open(optarg, flag, 0644);
 	optionalFlags = 0; 
 	if(fd == -1)
 	{
@@ -651,7 +660,7 @@ void flagModifier(int option, char *argv[]) {
 
 void sig_handler(int signum)
 {
-	fprintf(stderr, "The diagnostic signal is: %d", signum);
+	fprintf(stderr, "Caught signal: %d\n", signum);
 	exit(signum);
 }
 
