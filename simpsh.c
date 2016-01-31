@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <sys/wait.h>
+#include <sys/resource.h>
 
 int* fdTable;
 int counter = 0;
@@ -28,7 +29,6 @@ void sig_handler(int signum);
 int argumentNumberCheck(char *argv[]);
 int argumentDigitCheck(char *argv[]); 
 void exitStatusChecker(); 
-void profileOutput(char *argv[]);
 
 struct pidStorage
 {
@@ -46,8 +46,6 @@ int main(int argc, char *argv[])
 	
 	int command_arg[3];
 	int command_counter = 0;
-	char* all_command_values;
-	
 	
 	int maxAlloc = 1;
 	int size = 0;
@@ -157,8 +155,13 @@ int main(int argc, char *argv[])
 			case 'o':
 				profile = 1; 
 				curCount = 1; 
-				printf("we get in the function\n"); 
-				profileOutput(argv); 
+				if(argumentNumberCheck(argv) != 1){
+					fprintf(stderr, "Error: Profile does not take arguments\n"); 
+				}
+		
+				if(verboseFlag)
+					verbosePrint(argv, curCount, current);
+				profile = 1; 
 				current += curCount; 
 				break; 
 			case 'p':                                     //pipes 
@@ -674,6 +677,9 @@ int main(int argc, char *argv[])
 		
 		opt = getopt_long(argc, argv, "a", long_options, &option_index);
 	}
+	free(bank); 
+	free(fdTable); 
+
 	exit(exit_status);
 }
 
@@ -770,20 +776,9 @@ void exitStatusChecker() {
 		exit_status = exit_holder; 
 }
 
-void profileOutput(char *argv[]) { 
-	printf("I like balck \n"); 
-	if(profile == 0) {
-		return; 
-	}
-	printf("We are still going\n"); 
-	if(argumentNumberCheck(argv) != 1){
-		fprintf(stderr, "Error: Profile does not take arguments\n"); 
-		return; 
-	}
-		
-	printf("Still going\n");
-	if(verboseFlag)
-		verbosePrint(argv, curCount, current);
+/*
+	struct rusage usage; 
+	if(getrusage(RUSAGE_SELF, &usage) == -1){
 
-	return; 
-}
+	}
+*/
