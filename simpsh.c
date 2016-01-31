@@ -20,6 +20,7 @@ int optionalFlags = 0;
 int error = 0; 
 int exit_status = 0; 
 int exit_holder = 0; 
+int profile = 0; 
 void verbosePrint(char *argv[], int curCount, int current); 
 void fileFunction(char *argv[], int flag);
 void flagModifier(int option, char *argv[]); 
@@ -27,6 +28,7 @@ void sig_handler(int signum);
 int argumentNumberCheck(char *argv[]);
 int argumentDigitCheck(char *argv[]); 
 void exitStatusChecker(); 
+void profileOutput(char *argv[]);
 
 struct pidStorage
 {
@@ -104,7 +106,7 @@ int main(int argc, char *argv[])
 		{"default", required_argument, 0, 'd'},
 		{"catch", required_argument, 0 , 't'},
 		{"pipe", no_argument, 0, 'p'}, 
-		 
+		{"profile", no_argument, 0, 'o'},
 		{0, 0, 0, 0}
 	};
 	
@@ -152,6 +154,13 @@ int main(int argc, char *argv[])
 		char** commandArgs; 
 		switch(opt)
 		{
+			case 'o':
+				profile = 1; 
+				curCount = 1; 
+				printf("we get in the function\n"); 
+				profileOutput(argv); 
+				current += curCount; 
+				break; 
 			case 'p':                                     //pipes 
 				curCount = 1; 
 				argumentNumberCheck(argv);
@@ -761,4 +770,20 @@ void exitStatusChecker() {
 		exit_status = exit_holder; 
 }
 
+void profileOutput(char *argv[]) { 
+	printf("I like balck \n"); 
+	if(profile == 0) {
+		return; 
+	}
+	printf("We are still going\n"); 
+	if(argumentNumberCheck(argv) != 1){
+		fprintf(stderr, "Error: Profile does not take arguments\n"); 
+		return; 
+	}
+		
+	printf("Still going\n");
+	if(verboseFlag)
+		verbosePrint(argv, curCount, current);
 
+	return; 
+}
