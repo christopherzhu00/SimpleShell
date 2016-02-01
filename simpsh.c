@@ -42,10 +42,21 @@ struct pidStorage *bank;
 
 struct rusage begin;
 struct rusage end;
+
+struct rusage child_begin;
+struct rusage child_end;
+
 struct timeval ub_time;
 struct timeval sb_time;
 struct timeval ue_time;
 struct timeval se_time;
+
+struct timeval ub_child_time;
+struct timeval sb_child_time;
+struct timeval ue_child_time;
+struct timeval se_child_time;
+
+
 
 int start1;
 int start2;
@@ -377,6 +388,29 @@ int main(int argc, char *argv[])
 				break;
 			}
 			case 'r' :
+			
+			///////////////////// THIS IS FOR WAIT ONLY
+				getrusage(RUSAGE_CHILDREN, &child_begin);
+				ub_child_time = child_begin.ru_utime;
+				sb_child_time = child_begin.ru_stime;
+				int child_start1 = ((int64_t)ub_child_time.tv_sec * 1000000) + ub_child_time.tv_usec;
+				int child_start2 = ((int64_t)sb_child_time.tv_sec * 1000000) + sb_child_time.tv_usec;
+				
+				//FUNCTION GOES HERE
+				
+				
+				getrusage(RUSAGE_SELF, &child_end);
+				ue_child_time = end.ru_utime;
+				se_child_time = end.ru_stime;
+				int child_finish1 = ((int64_t)ue_child_time.tv_sec * 1000000) + ue_child_time.tv_usec;
+				int child_finish2 = ((int64_t)se_child_time.tv_sec * 1000000) + se_child_time.tv_usec;
+			
+				int child_total1 = child_finish1 - child_start1;
+				int child_total2 = child_finish2 - child_start2;
+			
+			
+			
+			
 				getrusage(RUSAGE_SELF, &begin);
 				ub_time = begin.ru_utime;
 				sb_time = begin.ru_stime;
