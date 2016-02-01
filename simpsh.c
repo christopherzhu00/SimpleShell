@@ -9,6 +9,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/resource.h>
+#include <sys/time.h>
 
 int* fdTable;
 int counter = 0;
@@ -38,6 +39,24 @@ struct pidStorage
 };
 
 struct pidStorage *bank;
+
+struct rusage begin;
+struct rusage end;
+struct timeval ub_time;
+struct timeval sb_time;
+struct timeval ue_time;
+struct timeval se_time;
+
+int start1;
+int start2;
+int finish1;
+int finish2;
+int total1;
+int total2;
+
+
+
+
 
 int main(int argc, char *argv[])
 {
@@ -161,7 +180,6 @@ int main(int argc, char *argv[])
 		
 				if(verboseFlag)
 					verbosePrint(argv, curCount, current);
-				profile = 1; 
 				current += curCount; 
 				break; 
 			case 'p':                                     //pipes 
@@ -359,7 +377,33 @@ int main(int argc, char *argv[])
 				break;
 			}
 			case 'r' :
+				getrusage(RUSAGE_SELF, &begin);
+				ub_time = begin.ru_utime;
+				sb_time = begin.ru_stime;
+				start1 = ((int64_t)ub_time.tv_sec * 1000000) + ub_time.tv_usec;
+				start2 = ((int64_t)sb_time.tv_sec * 1000000) + sb_time.tv_usec;
+				
+				printf("the start1 is: %d\n", start1);
+				printf("the start2 is: %d\n", start2);
+				
 				fileFunction(argv, O_RDONLY); 
+				
+				
+				
+				getrusage(RUSAGE_SELF, &end);
+				ue_time = end.ru_utime;
+				se_time = end.ru_stime;
+				finish1 = ((int64_t)ue_time.tv_sec * 1000000) + ue_time.tv_usec;
+				finish2 = ((int64_t)se_time.tv_sec * 1000000) + se_time.tv_usec;
+				
+				printf("the finish1 is: %d\n", finish1);
+				printf("the finish2 is: %d\n", finish2);
+				
+				total1 = finish1 - start1;
+				total2 = finish2 - start2;
+				printf("the total1 is: %d\n", total1);
+				printf("the total2 is: %d\n", total2);
+				
 				break;
 			
 			case 'w' :
