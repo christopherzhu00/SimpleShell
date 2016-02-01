@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <getopt.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,6 +24,8 @@ int error = 0;
 int exit_status = 0; 
 int exit_holder = 0; 
 int profile = 0; 
+int pipeOptions = 0; 
+int waitStatus = 0; 
 void verbosePrint(char *argv[], int curCount, int current); 
 void fileFunction(char *argv[], int flag);
 void flagModifier(int option, char *argv[]); 
@@ -30,6 +33,12 @@ void sig_handler(int signum);
 int argumentNumberCheck(char *argv[]);
 int argumentDigitCheck(char *argv[]); 
 void exitStatusChecker(); 
+void flagChecker(); 
+void startingTime(struct rusage *begin, struct rusage *child_begin);
+void endingTime(struct rusage *end, struct rusage *child_end);
+void waitStartingTime(struct rusage *child_begin); 
+void waitEndingTime(struct rusage *child_end); 
+void printTimes();
 
 struct pidStorage
 {
@@ -111,12 +120,12 @@ int main(int argc, char *argv[])
 	static struct option long_options[] = 
 	{
 		{"abort", no_argument, 0, 'a'},
-		{"nonblock", no_argument, 0, flag8},
+		{"nonblock", no_argument, 0, flag8}, ///this one for design problem 
 		{"command", required_argument, 0, 'c'},
 		{"directory", no_argument, 0, flag4},
 		{"excl", no_argument, 0, flag6},
 		{"rdwr", required_argument, 0, 'f'},
-		{"cloexec", no_argument, 0, flag2}, 
+		{"cloexec", no_argument, 0, flag2}, /////this one for design problem
 		{"creat", no_argument, 0, flag3},
 		{"nofollow", no_argument, 0, flag7},
 		{"append", no_argument, 0, flag1},
@@ -183,6 +192,7 @@ int main(int argc, char *argv[])
 		switch(opt)
 		{
 			case 'o':
+				startingTime(&begin, &child_begin); 
 				profile = 1; 
 				curCount = 1; 
 				if(argumentNumberCheck(argv) != 1){
@@ -209,13 +219,17 @@ int main(int argc, char *argv[])
 				}
 
 				int temFD[2];
-				exit_holder = pipe(temFD); 
+				if(optionalFlags !=0)
+					flagChecker(); 
+				exit_holder = pipe2(temFD, optionalFlags);
+				optionalFlags = 0;  
 				exitStatusChecker(); 
 				if(exit_holder == -1){
 					fprintf(stderr, "Error: Failure to create pipes\n"); 
 					ret = 1; 
 					opt = getopt_long(argc, argv, "a", long_options, &option_index);
 					current+=curCount; 
+					endingTime(&end, &child_end); 
 					continue; 
 				}
 				fdTable[counter++] = temFD[0]; 
@@ -226,9 +240,11 @@ int main(int argc, char *argv[])
 				}
 				fdTable[counter++] = temFD[1]; 
 				current+=curCount; 
+				endingTime(&end, &child_end); 
 				break; 
 
 			case 'a' :                                 //abort
+				startingTime(&begin, &child_begin); 
 				curCount = 1;
 				argumentNumberCheck(argv);
 				
@@ -241,13 +257,16 @@ int main(int argc, char *argv[])
 					ret = 1; 
 					opt = getopt_long(argc, argv, "a", long_options, &option_index);
 					current+=curCount; 
+					endingTime(&end, &child_end); 
 					continue; 
 				}
 				exit_holder = raise(SIGSEGV);
 				exitStatusChecker(); 
+				endingTime(&end, &child_end); 
 				break; 
 
 			case 'd' :                                //signal default
+				startingTime(&begin, &child_begin); 
 				curCount = 1; 
 				argumentNumberCheck(argv);
 				if(verboseFlag)
@@ -272,9 +291,11 @@ int main(int argc, char *argv[])
 				exit_holder = signum; 
 				exitStatusChecker();
 				current+=curCount;
+				endingTime(&end, &child_end); 
 				break;
 		
 			case 'i' :                                //signal ignore
+				startingTime(&begin, &child_begin); 
 				curCount = 1;
 				argumentNumberCheck(argv);
 				if(curCount != 2 || argumentDigitCheck(argv) == 0){ 
@@ -300,9 +321,11 @@ int main(int argc, char *argv[])
 				exit_holder = signum; 
 				exitStatusChecker();
 				current+=curCount; 
+				endingTime(&end, &child_end); 
 				break;
 				
 			case 't' :		// catch
+				startingTime(&begin, &child_begin); 
 				curCount = 1; 
 				argumentNumberCheck(argv);
 				if(curCount != 2 || argumentDigitCheck(argv) == 0){ 
@@ -327,20 +350,24 @@ int main(int argc, char *argv[])
 				exit_holder = signum; 
 				exitStatusChecker();
 				current +=curCount;
+				endingTime(&end, &child_end); 
 				break;
 				
-			case 'z' : {                           //wait  
+			case 'z' : {    
+				startingTime(&begin, &child_end);                        //wait  
 				for(i = 0; i < counter; i++)        //not sure where to put exit status here
 					{
 						close(fdTable[i]);
 					}
 				curCount = 1;
+				waitStatus = 1; 
 				argumentNumberCheck(argv); 
 				if(curCount != 1) {
 					fprintf(stderr, "Error: Wait does not take arguments\n"); 
 					ret = 1; 
 					opt = getopt_long(argc, argv, "a", long_options, &option_index);
 					current+=curCount; 
+					endingTime(&end, &child_end); 
 					continue; 
 				}
 				
@@ -385,59 +412,13 @@ int main(int argc, char *argv[])
 					printf("\n");
 				}	
 				current+=curCount;
+				endingTime(&end, &child_end); 
 				break;
 			}
 			case 'r' :
-			
-			///////////////////// THIS IS FOR WAIT ONLY
-				getrusage(RUSAGE_CHILDREN, &child_begin);
-				ub_child_time = child_begin.ru_utime;
-				sb_child_time = child_begin.ru_stime;
-				int child_start1 = ((int64_t)ub_child_time.tv_sec * 1000000) + ub_child_time.tv_usec;
-				int child_start2 = ((int64_t)sb_child_time.tv_sec * 1000000) + sb_child_time.tv_usec;
-				
-				//FUNCTION GOES HERE
-				
-				
-				getrusage(RUSAGE_SELF, &child_end);
-				ue_child_time = end.ru_utime;
-				se_child_time = end.ru_stime;
-				int child_finish1 = ((int64_t)ue_child_time.tv_sec * 1000000) + ue_child_time.tv_usec;
-				int child_finish2 = ((int64_t)se_child_time.tv_sec * 1000000) + se_child_time.tv_usec;
-			
-				int child_total1 = child_finish1 - child_start1;
-				int child_total2 = child_finish2 - child_start2;
-			
-			
-			
-			
-				getrusage(RUSAGE_SELF, &begin);
-				ub_time = begin.ru_utime;
-				sb_time = begin.ru_stime;
-				start1 = ((int64_t)ub_time.tv_sec * 1000000) + ub_time.tv_usec;
-				start2 = ((int64_t)sb_time.tv_sec * 1000000) + sb_time.tv_usec;
-				
-				printf("the start1 is: %d\n", start1);
-				printf("the start2 is: %d\n", start2);
-				
-				fileFunction(argv, O_RDONLY); 
-				
-				
-				
-				getrusage(RUSAGE_SELF, &end);
-				ue_time = end.ru_utime;
-				se_time = end.ru_stime;
-				finish1 = ((int64_t)ue_time.tv_sec * 1000000) + ue_time.tv_usec;
-				finish2 = ((int64_t)se_time.tv_sec * 1000000) + se_time.tv_usec;
-				
-				printf("the finish1 is: %d\n", finish1);
-				printf("the finish2 is: %d\n", finish2);
-				
-				total1 = finish1 - start1;
-				total2 = finish2 - start2;
-				printf("the total1 is: %d\n", total1);
-				printf("the total2 is: %d\n", total2);
-				
+				startingTime(&begin, &child_begin); 
+				fileFunction(argv, O_RDONLY);
+				endingTime(&end, &child_end);
 				break;
 			
 			case 'w' :
@@ -493,6 +474,7 @@ int main(int argc, char *argv[])
 				break; 	
 
 			case 'g':                                       //pause
+				startingTime(&begin, &child_begin); 
 				curCount = 1; 
 				argumentNumberCheck(argv);
 				
@@ -501,6 +483,7 @@ int main(int argc, char *argv[])
 					ret = 1; 
 					opt = getopt_long(argc, argv, "a", long_options, &option_index);
 					current+=curCount;
+					endingTime(&end, &child_end); 
 					continue; 
 				}
 				if(verboseFlag) 
@@ -508,9 +491,11 @@ int main(int argc, char *argv[])
 				exit_holder = pause(); 
 				exitStatusChecker(); 
 				current+=curCount;
+				endingTime(&end, &child_end); 
 				break; 
 
 			case 'u':                                        //close 
+			startingTime(&begin, &child_begin); 
 			curCount = 1; 
 			argumentNumberCheck(argv);
 			
@@ -521,6 +506,7 @@ int main(int argc, char *argv[])
 				fprintf(stderr, "Error: Incorrent Argument Syntax\n"); 
 				opt = getopt_long(argc, argv, "a", long_options, &option_index);
 				current+=curCount;
+				endingTime(&end, &child_end);
 				continue; 
 			}
 			int N = atoi(argv[current+1]); 
@@ -530,6 +516,7 @@ int main(int argc, char *argv[])
 				opt = getopt_long(argc, argv, "a", long_options, &option_index);
 				current+=curCount; 
 				size++; 
+				endingTime(&end, &child_end);
 				continue; 
 			}
 			int open = fcntl(fdTable[N], F_GETFL); 
@@ -539,6 +526,7 @@ int main(int argc, char *argv[])
 				size++; 
 				current += curCount;
 				opt = getopt_long(argc, argv, "a", long_options, &option_index);
+				endingTime(&end, &child_end);
 				continue; 
 				}
 			exit_holder = close(fdTable[N]); 
@@ -547,10 +535,11 @@ int main(int argc, char *argv[])
 			//current+=2; 
 			current += curCount; 
 			//counter++; 
-
+			endingTime(&end, &child_end);
 			break;
 
 			case 'v' :                               //verbose
+				startingTime(&begin, &child_begin); 
 				curCount = 1; 
 				argumentNumberCheck(argv);
 		
@@ -564,11 +553,12 @@ int main(int argc, char *argv[])
 				}
 				verboseFlag = 1;
 				current+=curCount;
+				endingTime(&end, &child_end);
 				break;
 				
 			case 'c' : 
 
-			
+			startingTime(&begin, &child_begin); 
 			commandArgs = malloc(sizeof(char*)*maxChars); 
 			int memoryCount = 0; 
 			int innerMemory = 100; 
@@ -633,6 +623,7 @@ int main(int argc, char *argv[])
 				fprintf(stderr, "Error in arguments. Not enough arguments.\n");
 				ret =1;  
 				opt = getopt_long(argc, argv, "a", long_options, &option_index);
+				endingTime(&end, &child_end);
 				continue;
 			}
 						//THE NEW ARRAY 
@@ -688,6 +679,7 @@ int main(int argc, char *argv[])
 				size++; 
 				error = 0; 
 				current += (count+1);
+				endingTime(&end, &child_end);
 				continue;
 			}
 			
@@ -709,6 +701,7 @@ int main(int argc, char *argv[])
 			}
 			if(error == 1) { 
 				error = 0; 
+				endingTime(&end, &child_end);
 				continue; 
 			}
 			size_of_argument1 = 0;
@@ -749,6 +742,7 @@ int main(int argc, char *argv[])
 					printf("Messed up forking.\n"); 
 					ret =1; 
 			}
+			endingTime(&end, &child_end);
 			break;
 		}
 		size++;
@@ -854,9 +848,71 @@ void exitStatusChecker() {
 		exit_status = exit_holder; 
 }
 
-/*
-	struct rusage usage; 
-	if(getrusage(RUSAGE_SELF, &usage) == -1){
-
+void flagChecker() { 
+	switch(optionalFlags) {
+		case O_NONBLOCK:
+			break; 
+		case O_CLOEXEC:
+			break;
+		case O_CLOEXEC | O_NONBLOCK:
+			break; 
+		default:
+			fprintf(stderr, "Error: Incorrect options passed to pipe\n"); 
+			optionalFlags = 0; 
+			break; 
 	}
-*/
+}
+
+void startingTime(struct rusage *begin, struct rusage *child_begin) {
+	if(profile == 1){
+		if(waitStatus == 1) {
+			waitStartingTime(child_begin); 
+		}
+		else {
+			getrusage(RUSAGE_SELF, begin);
+			ub_time = begin->ru_utime;
+			sb_time = begin->ru_stime;
+			start1 = ((int64_t)ub_time.tv_sec * 1000000) + ub_time.tv_usec;
+			start2 = ((int64_t)sb_time.tv_sec * 1000000) + sb_time.tv_usec;
+		}
+	}
+}
+void waitStartingTime(struct rusage *child_begin){
+	getrusage(RUSAGE_CHILDREN, child_begin);
+	ub_child_time = child_begin->ru_utime;
+	sb_child_time = child_begin->ru_stime;
+	int child_start1 = ((int64_t)ub_child_time.tv_sec * 1000000) + ub_child_time.tv_usec;
+	int child_start2 = ((int64_t)sb_child_time.tv_sec * 1000000) + sb_child_time.tv_usec;
+}
+
+void endingTime(struct rusage *end, struct rusage *child_end) { 
+	if(profile == 1) {
+		if(waitStatus == 1) {
+			waitEndingTime(child_end); 
+		}
+		else {
+			getrusage(RUSAGE_SELF, end);
+			ue_time = end->ru_utime;
+			se_time = end->ru_stime;
+			finish1 = ((int64_t)ue_time.tv_sec * 1000000) + ue_time.tv_usec;
+			finish2 = ((int64_t)se_time.tv_sec * 1000000) + se_time.tv_usec;
+		}
+		printTimes(); 
+	}
+}
+
+void waitEndingTime(struct rusage *child_end) {
+	getrusage(RUSAGE_SELF, child_end);
+	ue_child_time = child_end->ru_utime;
+	se_child_time = child_end->ru_stime;
+	int child_finish1 = ((int64_t)ue_child_time.tv_sec * 1000000) + ue_child_time.tv_usec;
+	int child_finish2 = ((int64_t)se_child_time.tv_sec * 1000000) + se_child_time.tv_usec;
+}
+
+void printTimes() {
+
+	total1 = finish1 - start1;
+	total2 = finish2 - start2;
+	printf("the User time is: %d\n", total1);
+	printf("the System time is: %d\n", total2);
+}
