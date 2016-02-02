@@ -25,8 +25,7 @@ int exit_status = 0;
 int exit_holder = 0; 
 int profile = 0; 
 int pipeOptions = 0; 
-int waitStatus = 0; 
-int optionCheck = 1; 
+//int waitStatus = 0; 
 void verbosePrint(char *argv[], int curCount, int current); 
 void fileFunction(char *argv[], int flag);
 void flagModifier(int option, char *argv[]); 
@@ -35,12 +34,12 @@ int argumentNumberCheck(char *argv[]);
 int argumentDigitCheck(char *argv[]); 
 void exitStatusChecker(); 
 void flagChecker(); 
-void startingTime(struct rusage *begin, struct rusage *child_begin);
+/*void startingTime(struct rusage *begin, struct rusage *child_begin);
 void endingTime(struct rusage *end, struct rusage *child_end);
 void waitStartingTime(struct rusage *child_begin); 
 void waitEndingTime(struct rusage *child_end); 
 void printTimes();
-void waitPrintTimes();
+void waitPrintTimes();*/
 
 struct pidStorage
 {
@@ -194,7 +193,8 @@ int main(int argc, char *argv[])
 
 	while(opt != -1)
 	{
-		getrusage(RUSAGE_SELF, &begin);
+		if(profile ==1) 
+			getrusage(RUSAGE_SELF, &begin);
 		if(size == maxAlloc)
 		{
 			maxAlloc *= 2;
@@ -208,7 +208,6 @@ int main(int argc, char *argv[])
 		switch(opt)
 		{
 			case 'o':
-				 
 				profile = 1; 
 				curCount = 1; 
 				if(argumentNumberCheck(argv) != 1){
@@ -369,17 +368,15 @@ int main(int argc, char *argv[])
 				 
 				break;
 				
-			case 'z' : {    
-			//	startingTime(&begin, &child_end);                        //wait  
-				getrusage(RUSAGE_CHILDREN, &begin_child);
+			case 'z' : {                           //wait  
+				if(profile ==1)
+					getrusage(RUSAGE_CHILDREN, &begin_child);
 			
-				
 				for(i = 0; i < counter; i++)        //not sure where to put exit status here
 					{
 						close(fdTable[i]);
 					}
 				curCount = 1;
-				waitStatus = 1; 
 				argumentNumberCheck(argv); 
 				if(curCount != 1) {
 					fprintf(stderr, "Error: Wait does not take arguments\n"); 
@@ -431,44 +428,30 @@ int main(int argc, char *argv[])
 					printf("\n");
 				}	
 				current+=curCount;
-				 
-				getrusage(RUSAGE_CHILDREN, &end_child);
-				totaluu_child = (long int) end_child.ru_utime.tv_usec - (long int) begin_child.ru_utime.tv_usec;
-				totalsu_child = (long int) end_child.ru_stime.tv_usec - (long int) begin_child.ru_stime.tv_usec;
-				totalus_child = (long int) end_child.ru_utime.tv_sec - (long int) begin_child.ru_utime.tv_sec;
-				totalss_child = (long int) end_child.ru_stime.tv_sec - (long int) begin_child.ru_stime.tv_sec;
-				printf("totalu_child microsec: %06ld\n", totaluu_child);
-				printf("totals_child microsec: %06ld\n", totalsu_child);
-				printf("totalu_child SEC: %ld\n", totalus_child);
-				printf("totals_child SEC: %ld\n", totalss_child);
+				 if(profile == 1) {
+				 	getrusage(RUSAGE_CHILDREN, &end_child);
+					totaluu_child = (long int) end_child.ru_utime.tv_usec - (long int) begin_child.ru_utime.tv_usec;
+					totalsu_child = (long int) end_child.ru_stime.tv_usec - (long int) begin_child.ru_stime.tv_usec;
+					totalus_child = (long int) end_child.ru_utime.tv_sec - (long int) begin_child.ru_utime.tv_sec;
+					totalss_child = (long int) end_child.ru_stime.tv_sec - (long int) begin_child.ru_stime.tv_sec;
+					printf("totalu_child microsec: %06ld\n", totaluu_child);
+					printf("totals_child microsec: %06ld\n", totalsu_child);
+					printf("totalu_child SEC: %ld.%06ld\n", totalus_child, totaluu_child);
+					printf("totals_child SEC: %ld.%06ld\n", totalss_child, totalsu_child);
+				 }
 				
 				break;
 			}
 			case 'r' :
-				if(optionCheck == 1){
-					 
-				}
 				fileFunction(argv, O_RDONLY);
-				
-				optionCheck = 1; 
 				break;
 			
 			case 'w' :
-				if(optionCheck == 1) {
-					 
-				}
 				fileFunction(argv, O_WRONLY); 
-				
-				optionCheck = 1; 
 				break;
 
 			case 'f':
-				if(optionCheck == 1) {
-					 
-				}
 				fileFunction(argv, O_RDWR); 
-				
-				optionCheck = 1;
 				break;
 
 			case flag1: 
@@ -789,17 +772,18 @@ int main(int argc, char *argv[])
 
 			break;
 		}
+		if(profile == 1) {
 			getrusage(RUSAGE_SELF, &end);
-			
-			
 			totaluu = (long int) end.ru_utime.tv_usec - (long int) begin.ru_utime.tv_usec;
-				totalsu = (long int) end.ru_stime.tv_usec - (long int) begin.ru_stime.tv_usec;
-				totalus = (long int) end.ru_utime.tv_sec - (long int) begin.ru_utime.tv_sec;
-				totalss = (long int) end.ru_stime.tv_sec - (long int) begin.ru_stime.tv_sec;
-				printf("totalu microsec: %06ld\n", totaluu);
-				printf("totals microsec: %06ld\n", totalsu);
-				printf("totalu SEC: %ld\n", totalus);
-				printf("totals SEC: %ld\n", totalss);
+			totalsu = (long int) end.ru_stime.tv_usec - (long int) begin.ru_stime.tv_usec;
+			totalus = (long int) end.ru_utime.tv_sec - (long int) begin.ru_utime.tv_sec;
+			totalss = (long int) end.ru_stime.tv_sec - (long int) begin.ru_stime.tv_sec;
+			printf("totalu microsec: %06ld\n", totaluu);
+			printf("totals microsec: %06ld\n", totalsu);
+			printf("totalu SEC: %ld.%06ld\n", totalus, totaluu);
+			printf("totals SEC: %ld.%06ld\n", totalss, totalsu);
+		}
+			
 		size++;
 		
 		opt = getopt_long(argc, argv, "a", long_options, &option_index);
@@ -862,12 +846,11 @@ void fileFunction(char *argv[], int flag) {
 }
 
 void flagModifier(int option, char *argv[]) { 
-	if(optionCheck == 1) {
-		 
-		optionCheck = 0; 
-	}
+	curCount =1; 
 	if(verboseFlag) {
 		verbosePrint(argv, curCount, current); 
+		//printf("current is: %d\n", current); 
+		//printf("curCount is: %d\n", curCount); 
 	}
 	optionalFlags |= option; 
 	current++; 
@@ -920,76 +903,4 @@ void flagChecker() {
 			optionalFlags = 0; 
 			break; 
 	}
-}
-
-void startingTime(struct rusage *begin, struct rusage *child_begin) {
-	if(profile == 1){
-		if(waitStatus == 1) {
-			waitStartingTime(child_begin); 
-		}
-		else {
-			getrusage(RUSAGE_SELF, begin);
-			ub_time = begin->ru_utime;
-			sb_time = begin->ru_stime;
-			start1 = ((long int)ub_time.tv_sec * 1000000) + ub_time.tv_usec;
-			start2 = ((long int)sb_time.tv_sec * 1000000) + sb_time.tv_usec;
-		}
-	}
-}
-void waitStartingTime(struct rusage *child_begin){
-	getrusage(RUSAGE_CHILDREN, child_begin);
-	ub_child_time = child_begin->ru_utime;
-	sb_child_time = child_begin->ru_stime;
-	child_start1 = ((long int)ub_child_time.tv_sec * 1000000) + ub_child_time.tv_usec;
-	child_start2 = ((long int)sb_child_time.tv_sec * 1000000) + sb_child_time.tv_usec;
-}
-
-void endingTime(struct rusage *end, struct rusage *child_end) { 
-	if(profile == 1) {
-		if(waitStatus == 1) {
-			waitEndingTime(child_end); 
-			waitPrintTimes(); 
-		}
-		else {
-			getrusage(RUSAGE_SELF, end);
-			ue_time = end->ru_utime;
-			se_time = end->ru_stime;
-			finish1 = ((long int)ue_time.tv_sec * 1000000) + (long int)ue_time.tv_usec;
-			finish2 = ((long int)se_time.tv_sec * 1000000) + (long int)se_time.tv_usec;
-			printTimes(); 
-		}
-		
-	}
-}
-
-void waitEndingTime(struct rusage *child_end) {
-	getrusage(RUSAGE_SELF, child_end);
-	ue_child_time = child_end->ru_utime;
-	se_child_time = child_end->ru_stime;
-	child_finish1 = (long int)ue_child_time.tv_sec * 1000000 + (long int)ue_child_time.tv_usec;
-	child_finish2 = (long int)se_child_time.tv_sec * 1000000 + (long int)se_child_time.tv_usec;
-}
-
-void printTimes() {	
-	printf("finish1 is: %d\n", finish1/1000000); 
-	printf("finish2 is: %d\n", finish2);
-	printf("start1 is: %d\n", start1);
-	printf("start2 is: %d\n", start2);
-
-	total1 = finish1 - start1;
-	total2 = finish2 - start2;
-	printf("the User time is: %d\n", total1);
-	printf("the System time is: %d\n", total2);
-}
-
-void waitPrintTimes() {
-	printf("finish1 is: %d\n", child_finish1); 
-	printf("finish2 is: %d\n", child_finish2);
-	printf("start1 is: %d\n", child_start1);
-	printf("start2 is: %d\n", child_start2);
-
-	total1 = child_finish1-child_start1; 
-	total2 = child_finish2 - child_start2; 
-	printf("the User time is: %d\n", total1); 
-	printf("the System time is: %d\n", total2); 
 }
