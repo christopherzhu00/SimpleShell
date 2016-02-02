@@ -26,6 +26,7 @@ int exit_holder = 0;
 int profile = 0; 
 int pipeOptions = 0; 
 int waitStatus = 0; 
+int optionCheck = 1; 
 void verbosePrint(char *argv[], int curCount, int current); 
 void fileFunction(char *argv[], int flag);
 void flagModifier(int option, char *argv[]); 
@@ -39,6 +40,7 @@ void endingTime(struct rusage *end, struct rusage *child_end);
 void waitStartingTime(struct rusage *child_begin); 
 void waitEndingTime(struct rusage *child_end); 
 void printTimes();
+void waitPrintTimes();
 
 struct pidStorage
 {
@@ -73,8 +75,10 @@ int finish1;
 int finish2;
 int total1;
 int total2;
-
-
+int child_finish1;
+int child_finish2;
+int child_start1;
+int child_start2;
 
 
 
@@ -416,17 +420,30 @@ int main(int argc, char *argv[])
 				break;
 			}
 			case 'r' :
-				startingTime(&begin, &child_begin); 
+				if(optionCheck == 1){
+					startingTime(&begin, &child_begin); 
+				}
 				fileFunction(argv, O_RDONLY);
 				endingTime(&end, &child_end);
+				optionCheck = 1; 
 				break;
 			
 			case 'w' :
+				if(optionCheck == 1) {
+					startingTime(&begin, &child_begin); 
+				}
 				fileFunction(argv, O_WRONLY); 
+				endingTime(&end, &child_end);
+				optionCheck = 1; 
 				break;
 
 			case 'f':
+				if(optionCheck == 1) {
+					startingTime(&begin, &child_begin); 
+				}
 				fileFunction(argv, O_RDWR); 
+				endingTime(&end, &child_end);
+				optionCheck = 1;
 				break;
 
 			case flag1: 
@@ -807,6 +824,10 @@ void fileFunction(char *argv[], int flag) {
 }
 
 void flagModifier(int option, char *argv[]) { 
+	if(optionCheck == 1) {
+		startingTime(&begin, &child_begin); 
+		optionCheck = 0; 
+	}
 	if(verboseFlag) {
 		verbosePrint(argv, curCount, current); 
 	}
@@ -881,14 +902,15 @@ void waitStartingTime(struct rusage *child_begin){
 	getrusage(RUSAGE_CHILDREN, child_begin);
 	ub_child_time = child_begin->ru_utime;
 	sb_child_time = child_begin->ru_stime;
-	int child_start1 = ((int64_t)ub_child_time.tv_sec * 1000000) + ub_child_time.tv_usec;
-	int child_start2 = ((int64_t)sb_child_time.tv_sec * 1000000) + sb_child_time.tv_usec;
+	child_start1 = ((int64_t)ub_child_time.tv_sec * 1000000) + ub_child_time.tv_usec;
+	child_start2 = ((int64_t)sb_child_time.tv_sec * 1000000) + sb_child_time.tv_usec;
 }
 
 void endingTime(struct rusage *end, struct rusage *child_end) { 
 	if(profile == 1) {
 		if(waitStatus == 1) {
 			waitEndingTime(child_end); 
+			waitPrintTimes(); 
 		}
 		else {
 			getrusage(RUSAGE_SELF, end);
@@ -896,8 +918,9 @@ void endingTime(struct rusage *end, struct rusage *child_end) {
 			se_time = end->ru_stime;
 			finish1 = ((int64_t)ue_time.tv_sec * 1000000) + ue_time.tv_usec;
 			finish2 = ((int64_t)se_time.tv_sec * 1000000) + se_time.tv_usec;
+			printTimes(); 
 		}
-		printTimes(); 
+		
 	}
 }
 
@@ -905,14 +928,30 @@ void waitEndingTime(struct rusage *child_end) {
 	getrusage(RUSAGE_SELF, child_end);
 	ue_child_time = child_end->ru_utime;
 	se_child_time = child_end->ru_stime;
-	int child_finish1 = ((int64_t)ue_child_time.tv_sec * 1000000) + ue_child_time.tv_usec;
-	int child_finish2 = ((int64_t)se_child_time.tv_sec * 1000000) + se_child_time.tv_usec;
+	child_finish1 = ((int64_t)ue_child_time.tv_sec * 1000000) + ue_child_time.tv_usec;
+	child_finish2 = ((int64_t)se_child_time.tv_sec * 1000000) + se_child_time.tv_usec;
 }
 
-void printTimes() {
+void printTimes() {	
+	printf("finish1 is: %d\n", finish1); 
+	printf("finish2 is: %d\n", finish2);
+	printf("start1 is: %d\n", start1);
+	printf("start2 is: %d\n", start2);
 
 	total1 = finish1 - start1;
 	total2 = finish2 - start2;
 	printf("the User time is: %d\n", total1);
 	printf("the System time is: %d\n", total2);
+}
+
+void waitPrintTimes() {
+	printf("finish1 is: %d\n", child_finish1); 
+	printf("finish2 is: %d\n", child_finish2);
+	printf("start1 is: %d\n", child_start1);
+	printf("start2 is: %d\n", child_start2);
+
+	total1 = child_finish1-child_start1; 
+	total2 = child_finish2 - child_start2; 
+	printf("the User time is: %d\n", total1); 
+	printf("the System time is: %d\n", total2); 
 }
